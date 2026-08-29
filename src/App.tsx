@@ -13,6 +13,7 @@ import ResidentsList from "./pages/Residents/ResidentsList"
 import ResidentDetail from "./pages/Residents/ResidentDetail"
 import NewResident from "./pages/Residents/NewResident"
 import ManageHub from "./pages/Manage/ManageHub"
+import CommonFilesHub from "./pages/CommonFiles/CommonFilesHub"
 import AuditLog from "./pages/Audit/AuditLog"
 import MetricsView from "./pages/Metrics/MetricsView"
 import RotaView from "./pages/Rota/RotaView"
@@ -39,6 +40,7 @@ import AdminResidents from "./pages/Admin/AdminResidents"
  *   audit.view            → Registered Manager, Deputy Manager, RI, System Admin
  *   residents.view        → Registered Manager, Deputy Manager, Team Leader, RSW (+ RI, System Admin)
  *   team.analytics.view   → Team Leader, Registered Manager, Deputy Manager, RI, System Admin (Rota page)
+ *   commonFiles.view      → all six roles (Common Files page — no route guard, same as /calendar and /team)
  */
 
 /** Preserves :id when redirecting /subjects/:id → /residents/:id */
@@ -91,6 +93,9 @@ function App() {
 
         {/* ── Team (RSW and above) ── */}
         <Route path="/team" element={<TeamOverview />} />
+
+        {/* ── Common Files (all roles — FR-COM) ── */}
+        <Route path="/common-files" element={<CommonFilesHub />} />
 
         {/* ── Rota (Team Leader and above) ── */}
         <Route

@@ -1,0 +1,231 @@
+.common-files {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: var(--shell-content-max);
+  margin: 0 auto;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ── Tab strip ─────────────────────────────────────── */
+
+.common-files__tabs {
+  display: inline-flex;
+  gap: var(--space-1);
+  padding: 2px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.common-files__tab {
+  min-height: 36px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-fg-muted);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: background var(--motion-fast) var(--ease-standard),
+    color var(--motion-fast) var(--ease-standard);
+}
+.common-files__tab:hover {
+  color: var(--color-fg);
+}
+.common-files__tab.is-active {
+  background: var(--color-surface);
+  color: var(--color-fg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ── Panel head (shared across tabs) ───────────────── */
+
+.common-files__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-divider);
+}
+.common-files__panel-head .section-title {
+  margin: 0;
+}
+
+.common-files__empty {
+  padding: var(--space-5);
+  text-align: center;
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+}
+.common-files__empty p {
+  margin: 0;
+}
+
+/* ── Statement of Purpose ──────────────────────────── */
+
+.common-files__purpose {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.common-files__purpose-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.common-files__purpose-label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-fg-subtle);
+  font-weight: var(--weight-semibold);
+}
+.common-files__purpose-value {
+  font-size: var(--text-sm);
+  color: var(--color-fg);
+  margin: 0;
+  line-height: 1.5;
+}
+.common-files__purpose-meta {
+  font-size: var(--text-xs);
+  color: var(--color-fg-subtle);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-divider);
+}
+
+/* ── Checks ─────────────────────────────────────────── */
+
+.common-files__checks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.common-files__check {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-divider);
+}
+.common-files__check:last-child {
+  border-bottom: 0;
+}
+.common-files__check-body {
+  min-width: 0;
+}
+.common-files__check-type {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-fg);
+}
+.common-files__check-notes {
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+  margin-top: 2px;
+}
+.common-files__check-meta {
+  font-size: var(--text-xs);
+  color: var(--color-fg-subtle);
+  white-space: nowrap;
+}
+
+/* ── Meetings ───────────────────────────────────────── */
+
+.common-files__meetings {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.common-files__meeting {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-divider);
+}
+.common-files__meeting:last-child {
+  border-bottom: 0;
+}
+.common-files__meeting-body {
+  min-width: 0;
+}
+.common-files__meeting-kind {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-fg);
+}
+.common-files__meeting-notes {
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+  margin-top: 2px;
+}
+.common-files__meeting-attendees {
+  font-size: var(--text-xs);
+  color: var(--color-fg-subtle);
+  margin-top: var(--space-1);
+}
+.common-files__meeting-date {
+  font-size: var(--text-xs);
+  color: var(--color-fg-subtle);
+  white-space: nowrap;
+}
+
+/* ── Handovers ──────────────────────────────────────── */
+
+.common-files__handovers {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.common-files__handover {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-divider);
+}
+.common-files__handover:last-child {
+  border-bottom: 0;
+}
+.common-files__handover-body {
+  min-width: 0;
+}
+.common-files__handover-shift {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-fg);
+}
+.common-files__handover-notes {
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+  margin-top: 2px;
+}
+.common-files__handover-meta {
+  font-size: var(--text-xs);
+  color: var(--color-fg-subtle);
+  white-space: nowrap;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+
+@media (max-width: 960px) {
+  .common-files__panel-head {
+    padding: var(--space-3) var(--space-4);
+  }
+  .common-files__check,
+  .common-files__meeting,
+  .common-files__handover {
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
+}

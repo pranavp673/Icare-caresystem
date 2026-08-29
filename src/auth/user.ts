@@ -100,6 +100,8 @@ export const MOCK_USERS: MockUser[] = [
       "team.view",
       "residents.view",
       "residents.comments.write",
+      "commonFiles.view",
+      "commonFiles.log",
     ],
   },
 
@@ -129,6 +131,8 @@ export const MOCK_USERS: MockUser[] = [
       "manage.view",
       "residents.view",
       "residents.comments.write",
+      "commonFiles.view",
+      "commonFiles.log",
     ],
   },
 
@@ -172,6 +176,8 @@ export const MOCK_USERS: MockUser[] = [
       "timesheets.view.all",
       "audit.view",
       "audit.view.all",
+      "commonFiles.view",
+      "commonFiles.log",
     ],
   },
 
@@ -220,6 +226,9 @@ export const MOCK_USERS: MockUser[] = [
       "audit.view",
       "audit.view.all",
       "audit.export",
+      "commonFiles.view",
+      "commonFiles.log",
+      "commonFiles.edit",
     ],
   },
 
@@ -265,6 +274,8 @@ export const MOCK_USERS: MockUser[] = [
       "audit.view",
       "audit.view.all",
       "audit.export",
+      // Common Files — view only, cannot log entries (outside the operational chain)
+      "commonFiles.view",
       // No system.* — that's System Admin's domain now
     ],
   },
@@ -315,6 +326,9 @@ export const MOCK_USERS: MockUser[] = [
       "audit.view",
       "audit.view.all",
       "audit.export",
+      "commonFiles.view",
+      "commonFiles.log",
+      "commonFiles.edit",
       "system.company.edit",
       "system.home.edit",
       "system.workpatterns.edit",

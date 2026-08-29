@@ -52,6 +52,11 @@ export type Permission =
   | "residents.edit" //     edit resident details (not comments — see below)
   | "residents.comments.write" // add/edit notes on resident records (everyone EXCEPT admin)
 
+  // ── Common Files (FR-COM) — home-level compliance docs ──
+  | "commonFiles.view" // held by everyone, same pattern as me.view/team.view
+  | "commonFiles.log" //  log a check/meeting/handover (operational chain, not RI)
+  | "commonFiles.edit" // edit Statement of Purpose (Registered Manager, Admin)
+
   // ── Timesheets & variance ─────────────────────────────
   | "timesheets.view.all" // view all timesheets across a home (Manager, Deputy)
   | "variance.approve" //   approve or decline a variance request (Manager, Deputy)
@@ -71,11 +76,13 @@ export type Permission =
 
   // ── System / master-data (Admin only) ─────────────────
   /**
-   * These permissions are exclusively held by the system Admin role.
-   * Admin configures the structure (company, homes, senior staff accounts,
-   * work patterns) that the operational roles then work within.
-   * Admin does NOT hold any operational permissions (no variance.submit,
-   * no residents.comments.write, no timesheets.view.all, etc.).
+   * These permissions are exclusively held by System Admin. Admin
+   * configures the structure (company, homes, senior staff accounts, work
+   * patterns) that the operational roles then work within. Since the
+   * role rename, System Admin also holds every operational permission
+   * (full, unrestricted access — see auth/user.ts) — these four remain
+   * exclusive to Admin specifically, not "Admin-only" in the old sense of
+   * "Admin and nobody else has operational access."
    */
   | "system.company.edit" //        edit Company master data
   | "system.home.edit" //           register / edit Home records

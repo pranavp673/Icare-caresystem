@@ -14,8 +14,8 @@
  *   RI                  → everything except Admin group, view-only (no approve/edit actions)
  *   Registered Manager  → everything except Admin group
  *   Deputy Manager       → same as Registered Manager
- *   Team Leader          → Dashboard, Team, Calendar, Rota, Residents (read), Manage
- *   RSW                  → Dashboard, Team (own), Calendar, Residents (read)
+ *   Team Leader          → Dashboard, Team, Calendar, Rota, Residents (read), Manage, Common Files
+ *   RSW                  → Dashboard, Team (own), Calendar, Residents (read), Common Files
  */
 
 import type { LucideIcon } from "lucide-react"
@@ -31,6 +31,7 @@ import {
   ScrollText,
   Settings2,
   UserCog,
+  FileText,
 } from "lucide-react"
 import type { Permission } from "../auth/roles"
 
@@ -107,6 +108,15 @@ export const NAV_GROUPS: NavGroup[] = [
         matchPrefix: "/residents",
         hint: "Per-resident profile, care history, and notes",
         requiredPerms: ["residents.view"],
+      },
+      {
+        id: "common-files",
+        to: "/common-files",
+        label: "Common Files",
+        icon: FileText,
+        matchPrefix: "/common-files",
+        hint: "Statement of Purpose, checks, meetings, and handovers",
+        requiredPerms: ["commonFiles.view"],
       },
     ],
   },
