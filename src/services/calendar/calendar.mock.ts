@@ -58,37 +58,37 @@ export type CalendarEvent = {
  */
 export const CALENDAR_EVENTS: CalendarEvent[] = [
   // ── Week 1 (current) ─ personal ────────────────────
-  { id: "e1", date: "2026-04-07", kind: "shift", title: "Willow · West wing", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow W.", mine: true, person: "You" },
-  { id: "e2", date: "2026-04-08", kind: "shift", title: "Willow · West wing", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow W.", mine: true, person: "You" },
+  { id: "e1", date: "2026-04-07", kind: "shift", title: "Willow · Maple Unit", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow M.", mine: true, person: "You" },
+  { id: "e2", date: "2026-04-08", kind: "shift", title: "Willow · Maple Unit", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow M.", mine: true, person: "You" },
   { id: "e3", date: "2026-04-09", kind: "overtime", title: "+4h Oakmoor cover", time: "15:00–19:00", start: "15:00", end: "19:00", status: "approved", ward: "Oakmoor", mine: true, person: "You" },
-  { id: "e4", date: "2026-04-10", kind: "shift", title: "Willow · West wing", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow W.", mine: true, person: "You" },
-  { id: "e5", date: "2026-04-11", kind: "shift", title: "Willow (on duty)", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow W.", mine: true, person: "You" },
-  { id: "e6", date: "2026-04-12", kind: "shift", title: "Willow · West wing", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow W.", mine: true, person: "You" },
-  { id: "e7", date: "2026-04-13", kind: "shift", title: "Willow · East wing", time: "14:00–22:00", start: "14:00", end: "22:00", ward: "Willow E.", mine: true, person: "You" },
+  { id: "e4", date: "2026-04-10", kind: "shift", title: "Willow · Maple Unit", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow M.", mine: true, person: "You" },
+  { id: "e5", date: "2026-04-11", kind: "shift", title: "Willow (on duty)", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow M.", mine: true, person: "You" },
+  { id: "e6", date: "2026-04-12", kind: "shift", title: "Willow · Maple Unit", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow M.", mine: true, person: "You" },
+  { id: "e7", date: "2026-04-13", kind: "shift", title: "Willow · Oak Unit", time: "14:00–22:00", start: "14:00", end: "22:00", ward: "Willow O.", mine: true, person: "You" },
 
   // ── Week 1 ─ teammate + vacant (manager only) ──────
-  { id: "t1", date: "2026-04-07", kind: "shift", title: "Willow · East wing", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow E.", person: "Daniel T." },
-  { id: "t2", date: "2026-04-09", kind: "shift", title: "Willow · East wing", time: "14:00–22:00", start: "14:00", end: "22:00", ward: "Willow E.", person: "Hiroki T." },
-  { id: "t3", date: "2026-04-10", kind: "shift", title: "Willow Nursing", time: "07:00–19:00", start: "07:00", end: "19:00", ward: "Willow N.", person: "Tomás R." },
-  { id: "v1", date: "2026-04-11", kind: "unfilled", title: "Vacant · East wing", start: "14:00", end: "22:00", ward: "Willow E.", slot: "East wing · Senior HCA" },
-  { id: "v2", date: "2026-04-12", kind: "unfilled", title: "Vacant · Night cover", start: "21:00", end: "07:00", ward: "Willow", slot: "Night cover · HCA" },
+  { id: "t1", date: "2026-04-07", kind: "shift", title: "Willow · Oak Unit", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow O.", person: "Daniel T." },
+  { id: "t2", date: "2026-04-09", kind: "shift", title: "Willow · Oak Unit", time: "14:00–22:00", start: "14:00", end: "22:00", ward: "Willow O.", person: "Hiroki T." },
+  { id: "t3", date: "2026-04-10", kind: "shift", title: "Willow Senior Cover", time: "07:00–19:00", start: "07:00", end: "19:00", ward: "Willow S.", person: "Tomás R." },
+  { id: "v1", date: "2026-04-11", kind: "unfilled", title: "Vacant · Oak Unit", start: "14:00", end: "22:00", ward: "Willow O.", slot: "Oak Unit · Senior RCW" },
+  { id: "v2", date: "2026-04-12", kind: "unfilled", title: "Vacant · Night cover", start: "21:00", end: "07:00", ward: "Willow", slot: "Night cover · RCW" },
 
   // ── Week 2 ─ personal + teammate ───────────────────
   { id: "e8", date: "2026-04-14", kind: "swap", title: "Swap request → Daniel", time: "07:00–15:00", start: "07:00", end: "15:00", status: "awaiting_teammate", mine: true, person: "You" },
   { id: "e9", date: "2026-04-15", kind: "shift", title: "Oakmoor", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Oakmoor", mine: true, person: "You" },
   { id: "e10", date: "2026-04-16", kind: "leave", title: "Personal leave", status: "approved", mine: true, person: "You" },
   { id: "e11", date: "2026-04-17", kind: "leave", title: "Personal leave", status: "approved", mine: true, person: "You" },
-  { id: "e12", date: "2026-04-18", kind: "unfilled", title: "Vacant · Night", start: "21:00", end: "07:00", slot: "Night cover · HCA", openRequests: ["overtime"] },
-  { id: "t4", date: "2026-04-14", kind: "shift", title: "Willow · East wing", time: "14:00–22:00", start: "14:00", end: "22:00", ward: "Willow E.", person: "Beatrice M." },
+  { id: "e12", date: "2026-04-18", kind: "unfilled", title: "Vacant · Night", start: "21:00", end: "07:00", slot: "Night cover · RCW", openRequests: ["overtime"] },
+  { id: "t4", date: "2026-04-14", kind: "shift", title: "Willow · Oak Unit", time: "14:00–22:00", start: "14:00", end: "22:00", ward: "Willow O.", person: "Beatrice M." },
   { id: "t5", date: "2026-04-15", kind: "leave", title: "Daniel — annual leave", status: "approved", person: "Daniel T." },
-  { id: "v3", date: "2026-04-17", kind: "unfilled", title: "Vacant · Nursing RN", start: "15:00", end: "23:00", ward: "Rowan", slot: "Nursing · RN" },
+  { id: "v3", date: "2026-04-17", kind: "unfilled", title: "Vacant · Senior RCW RN", start: "15:00", end: "23:00", ward: "Rowan", slot: "Senior RCW" },
 
   // ── Week 3 ─ personal + teammate ───────────────────
-  { id: "e13", date: "2026-04-20", kind: "shift", title: "Willow", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow W.", mine: true, person: "You" },
-  { id: "e14", date: "2026-04-21", kind: "shift", title: "Willow", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow W.", mine: true, person: "You" },
+  { id: "e13", date: "2026-04-20", kind: "shift", title: "Willow", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow M.", mine: true, person: "You" },
+  { id: "e14", date: "2026-04-21", kind: "shift", title: "Willow", time: "07:00–15:00", start: "07:00", end: "15:00", ward: "Willow M.", mine: true, person: "You" },
   { id: "e15", date: "2026-04-23", kind: "overtime", title: "+2h Willow", time: "15:00–17:00", start: "15:00", end: "17:00", status: "pending", mine: true, person: "You" },
-  { id: "t6", date: "2026-04-20", kind: "shift", title: "Willow · East", time: "14:00–22:00", start: "14:00", end: "22:00", ward: "Willow E.", person: "Hiroki T." },
-  { id: "v4", date: "2026-04-22", kind: "unfilled", title: "Vacant · Nursing", start: "07:00", end: "19:00", ward: "Willow N.", slot: "Nursing · RN" },
+  { id: "t6", date: "2026-04-20", kind: "shift", title: "Willow · Oak", time: "14:00–22:00", start: "14:00", end: "22:00", ward: "Willow O.", person: "Hiroki T." },
+  { id: "v4", date: "2026-04-22", kind: "unfilled", title: "Vacant · Senior RCW", start: "07:00", end: "19:00", ward: "Willow S.", slot: "Senior RCW" },
 
   // ── Month-ahead (personal annual leave) ────────────
   { id: "e16", date: "2026-05-02", kind: "leave", title: "Annual leave · day 1", status: "approved", mine: true, person: "You" },

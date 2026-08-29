@@ -129,6 +129,57 @@
   color: inherit;
 }
 
+/* ─── Demo User Switcher ─────────────── */
+
+.user-menu__switcher {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-1) var(--space-2);
+}
+
+.user-menu__switcher-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--motion-fast) var(--ease-standard);
+}
+.user-menu__switcher-item:hover:not(:disabled) {
+  background: var(--color-surface-muted);
+}
+.user-menu__switcher-item.is-current {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.user-menu__switcher-name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-fg);
+}
+.user-menu__switcher-role {
+  font-size: var(--text-xs);
+  color: var(--color-fg-subtle);
+  flex: 1;
+}
+.user-menu__switcher-badge {
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+}
+
 /* ─── Responsive ─────────────────────── */
 
 @media (max-width: 720px) {

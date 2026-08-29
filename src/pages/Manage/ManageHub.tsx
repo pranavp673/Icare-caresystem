@@ -314,7 +314,7 @@ const ManageHub: React.FC = () => {
           <div className="manage__approval-body">
             <div className="manage__approval-head">
               <span className="manage__approval-name">{a.requester.name}</span>
-              <span className="manage__approval-role">{a.requester.role}</span>
+              <span className="manage__approval-role">{a.requester.role} · {a.requester.home}</span>
               <span className={`badge badge--${priorityTone(a.priority)}`}>
                 {priorityLabel(a.priority)}
               </span>
@@ -368,7 +368,7 @@ const ManageHub: React.FC = () => {
               <span className="manage__swap-name manage__swap-name--to">
                 {s.counterparty.name}
               </span>
-              <span className="manage__swap-role">{s.requester.role}</span>
+              <span className="manage__swap-role">{s.requester.role} · {s.requester.home}</span>
             </div>
             <div className="manage__swap-summary">{s.summary}</div>
             <div className="manage__swap-when">{s.when}</div>
@@ -630,8 +630,8 @@ const ManageHub: React.FC = () => {
             <input
               name="slot"
               className="form-field__control"
-              placeholder="East wing · Senior HCA"
-              defaultValue="East wing · Senior HCA"
+              placeholder="Oak Unit · Senior RCW"
+              defaultValue="Oak Unit · Senior RCW"
             />
           </label>
           <div className="form-row">

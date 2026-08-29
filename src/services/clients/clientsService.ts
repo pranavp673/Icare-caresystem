@@ -2,8 +2,8 @@
  * ClientsSvc client. Per-client profile, comments, and service history.
  *
  * Lives at `/api/clients/*` in the real backend; on the backend side it
- * aggregates HomeSvc (resident roster, keyworker) with CareSvc (care
- * plans, medication, incidents, notes). On the UI side it's a single
+ * aggregates HomeSvc (resident roster, keyworker) with CareSvc (placement
+ * plans, safeguarding, incidents, notes). On the UI side it's a single
  * client so pages don't have to fan out.
  *
  * Scope rules (enforced in the gateway on top of these filters):

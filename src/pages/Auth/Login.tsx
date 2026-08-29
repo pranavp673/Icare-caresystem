@@ -4,28 +4,66 @@ import "./Login.scss"
 import { STRINGS } from "../../i18n/strings"
 import { identityService } from "../../services"
 import { setAuthToken } from "../../services/gateway/tokenStore"
+import { MOCK_USERS } from "../../auth/user"
+import type { MockUser } from "../../auth/user"
 
 /**
  * AUTH-001 — Sign in.
  *
- * Submits through `identityService.login` so the UI talks to IdSvc via
- * the gateway client (mocked in the prototype, real JWT in prod). On
- * success we persist the returned token via `setAuthToken` so every
- * downstream gateway call automatically carries the bearer header, then
- * navigate to the app shell. The AppShell's AuthContext bootstrap
- * (`Promise.all([getMe, getMyPermissions])`) picks up the fresh token.
+ * In the mock phase the Login page doubles as a demo user picker: the
+ * five tiered mock users are shown as clickable cards so reviewers can
+ * experience the system from Care Worker through System Admin without
+ * remembering credentials. Clicking a card writes the chosen user id
+ * into localStorage (`icare.user`) and navigates to the app shell,
+ * which bootstraps AuthContext from the stored identity.
  *
- * Copy follows docs/02-ui-ux/13-content-and-microcopy.md: warm, plain,
- * no "oops".
+ * The original email / password form is preserved below the demo cards
+ * for future integration with the real IdSvc.
  */
+
+/** Short human-readable summaries of what each tier can do. */
+const TIER_LABELS: Record<string, { tier: string; color: string; summary: string }> = {
+  "u-pro": {
+    tier: "Tier 4",
+    color: "#22c55e",
+    summary: "Own schedule, timesheets, read residents, write comments",
+  },
+  "u-tl": {
+    tier: "Tier 3",
+    color: "#3b82f6",
+    summary: "Team schedules, rota view, manage hub, residents",
+  },
+  "u-ad": {
+    tier: "Tier 2",
+    color: "#a855f7",
+    summary: "Mon–Fri 9–5 · Home dashboard, approve variances, audit log",
+  },
+  "u-hm": {
+    tier: "Tier 1",
+    color: "#f59e0b",
+    summary: "Mon–Fri 9–5 · Full authority for Willow House — dashboard, teams, audit",
+  },
+  "u-sm": {
+    tier: "Super",
+    color: "#e11d48",
+    summary: "Everything — all homes, all operations, plus system admin",
+  },
+  "u-sys": {
+    tier: "Admin",
+    color: "#ef4444",
+    summary: "System config, master data, no operational write access",
+  },
+}
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [loggingInAs, setLoggingInAs] = useState<string | null>(null)
   const navigate = useNavigate()
 
+  /** Standard email / password login (for future real-backend use). */
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setBusy(true)
@@ -33,10 +71,6 @@ const Login: React.FC = () => {
     void identityService
       .login({ email, password })
       .then((res) => {
-        // TODO(integration): when the real endpoint is live, setAuthToken
-        // will carry the JWT into every subsequent gateway request via
-        // the Bearer header (cookies optional). The mock JWT is still
-        // accepted by the mock gateway, so dev flow is unchanged.
         setAuthToken(res.token)
         navigate("/")
       })
@@ -50,10 +84,30 @@ const Login: React.FC = () => {
       })
   }
 
+  /** Demo card click — persist user id, set token, enter app. */
+  const handleDemoLogin = (user: MockUser) => {
+    setLoggingInAs(user.id)
+    try {
+      window.localStorage.setItem("icare.user", user.id)
+    } catch {
+      /* storage denied */
+    }
+    void identityService
+      .login({ email: user.name, password: "demo" })
+      .then((res) => {
+        setAuthToken(res.token)
+        // Full page load so AuthContext re-bootstraps with the new user
+        window.location.href = "/"
+      })
+      .catch(() => {
+        setLoggingInAs(null)
+      })
+  }
+
   return (
     <div className="login">
       <div className="login__backdrop" aria-hidden="true" />
-      <div className="login__card-wrap">
+      <div className="login__card-wrap login__card-wrap--wide">
         <div className="login__brand">
           <div className="login__logo" aria-hidden="true">I</div>
           <div>
@@ -62,12 +116,57 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        <form className="login__card" onSubmit={onSubmit} noValidate>
-          <div className="login__heading">
-            <h1>{STRINGS.auth.login.title}</h1>
-            <p>{STRINGS.auth.login.subtitle}</p>
+        {/* ── Demo User Picker ── */}
+        <div className="login__demo-section">
+          <div className="login__demo-header">
+            <h2>Choose a demo account</h2>
+            <p>Each role sees a different set of pages and actions — click a card to sign in.</p>
           </div>
 
+          <div className="login__demo-grid">
+            {MOCK_USERS.map((u) => {
+              const meta = TIER_LABELS[u.id] ?? { tier: "?", color: "#888", summary: "" }
+              const isLoading = loggingInAs === u.id
+              return (
+                <button
+                  key={u.id}
+                  type="button"
+                  className={`login__demo-card ${isLoading ? "is-loading" : ""}`}
+                  onClick={() => handleDemoLogin(u)}
+                  disabled={!!loggingInAs}
+                  style={{ "--card-accent": meta.color } as React.CSSProperties}
+                >
+                  <span className="login__demo-avatar" aria-hidden="true">
+                    {u.initials}
+                  </span>
+                  <span className="login__demo-info">
+                    <span className="login__demo-name">{u.name}</span>
+                    <span className="login__demo-role">{u.roleLabel}</span>
+                    <span className="login__demo-summary">{meta.summary}</span>
+                  </span>
+                  <span className="login__demo-tier">{meta.tier}</span>
+                  {isLoading && <span className="login__demo-spinner" />}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="login__demo-legend">
+            <p>
+              <strong>Permissions, not roles</strong> — the sidebar, buttons, and pages you see
+              are controlled by a flat permission list. Higher tiers accumulate more permissions;
+              System Admin has a separate set for configuration only.
+            </p>
+          </div>
+        </div>
+
+        {/* ── Divider ── */}
+        <div className="login__divider" aria-hidden="true">
+          <span>or sign in with credentials</span>
+        </div>
+
+        {/* ── Traditional Login Form ── */}
+        <form className="login__card" onSubmit={onSubmit} noValidate>
           <label className="login__field">
             <span className="login__label">{STRINGS.auth.login.emailLabel}</span>
             <input
@@ -97,11 +196,6 @@ const Login: React.FC = () => {
             />
           </label>
 
-          <label className="login__remember">
-            <input type="checkbox" defaultChecked />
-            <span>{STRINGS.auth.login.rememberMe}</span>
-          </label>
-
           {error && (
             <div role="alert" className="login__error">
               {error}
@@ -115,21 +209,6 @@ const Login: React.FC = () => {
           >
             {busy ? STRINGS.common.loading : STRINGS.auth.login.submit}
           </button>
-
-          <div className="login__divider" aria-hidden="true">
-            <span>{STRINGS.auth.login.ssoDivider}</span>
-          </div>
-
-          <div className="login__sso">
-            <button type="button" className="btn btn--secondary">
-              <span aria-hidden="true">⬢</span> {STRINGS.auth.login.ssoMicrosoft}
-            </button>
-            <button type="button" className="btn btn--secondary">
-              <span aria-hidden="true">◉</span> {STRINGS.auth.login.ssoGoogle}
-            </button>
-          </div>
-
-          <p className="login__security">{STRINGS.auth.login.helpSecurity}</p>
         </form>
 
         <p className="login__footer">

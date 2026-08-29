@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { Sun, Moon, Settings, LogOut, ChevronDown } from "lucide-react"
+import { Sun, Moon, Settings, LogOut, ChevronDown, Users } from "lucide-react"
 import { useAuth } from "../../auth/AuthContext"
+import { identityService } from "../../services"
 import "./UserMenu.scss"
 
 type ThemeMode = "light" | "dark" | "system"
@@ -12,10 +13,13 @@ type Props = {
   onToggleTheme: () => void
 }
 
+const demoUsers = identityService.listDemoUsers()
+
 const UserMenu: React.FC<Props> = ({ theme, themeMode, onToggleTheme }) => {
-  const { user, logout } = useAuth()
+  const { user, switchDemoUser, logout } = useAuth()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const [showSwitcher, setShowSwitcher] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
   const itemsRef = useRef<(HTMLButtonElement | null)[]>([])
@@ -29,6 +33,7 @@ const UserMenu: React.FC<Props> = ({ theme, themeMode, onToggleTheme }) => {
 
   const close = useCallback(() => {
     setOpen(false)
+    setShowSwitcher(false)
     btnRef.current?.focus()
   }, [])
 
@@ -148,10 +153,47 @@ const UserMenu: React.FC<Props> = ({ theme, themeMode, onToggleTheme }) => {
             <span>Settings</span>
           </button>
 
+          <button
+            ref={(el) => { itemsRef.current[2] = el }}
+            type="button"
+            role="menuitem"
+            className="user-menu__item"
+            onClick={() => setShowSwitcher((v) => !v)}
+          >
+            <span className="user-menu__item-icon" aria-hidden="true">
+              <Users size={16} />
+            </span>
+            <span>Switch user</span>
+          </button>
+
+          {showSwitcher && (
+            <div className="user-menu__switcher">
+              {demoUsers.map((u) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  className={`user-menu__switcher-item ${u.id === user.id ? "is-current" : ""}`}
+                  disabled={u.id === user.id}
+                  onClick={() => {
+                    close()
+                    void switchDemoUser(u.id).then(() => {
+                      // Full page reload so every component re-renders with new permissions
+                      window.location.href = "/"
+                    })
+                  }}
+                >
+                  <span className="user-menu__switcher-name">{u.name}</span>
+                  <span className="user-menu__switcher-role">{u.roleLabel}</span>
+                  {u.id === user.id && <span className="user-menu__switcher-badge">Current</span>}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="user-menu__divider" role="separator" />
 
           <button
-            ref={(el) => { itemsRef.current[2] = el }}
+            ref={(el) => { itemsRef.current[3] = el }}
             type="button"
             role="menuitem"
             className="user-menu__item user-menu__item--danger"

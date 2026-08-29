@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { motion } from "framer-motion"
 import "./TeamOverview.scss"
 import PageHeader from "../../components/PageHeader/PageHeader"
@@ -64,7 +64,8 @@ const STATUS_TONE: Record<TeamMember["status"], "success" | "neutral" | "info"> 
 }
 
 type HomeFilter = "all" | string
-type StatusFilter = "all" | TeamMember["status"]
+type TypeFilter = "all" | "leave" | "swap"
+type ApprovalStatusFilter = "pending" | "approved" | "all"
 
 const TeamOverview: React.FC = () => {
   const { user, scope, can } = useAuth()
@@ -76,13 +77,57 @@ const TeamOverview: React.FC = () => {
 
   const [query, setQuery] = useState("")
   const [homeFilter, setHomeFilter] = useState<HomeFilter>("all")
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all")
+  const [approvalStatusFilter, setApprovalStatusFilter] = useState<ApprovalStatusFilter>("pending")
 
   const [overrideMember, setOverrideMember] = useState<TeamMember | null>(null)
   const [reviewMember, setReviewMember] = useState<TeamMember | null>(null)
   // Track members whose pending items have been resolved, so the UI
   // reflects the action.
   const [resolved, setResolved] = useState<Record<string, boolean>>({})
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const [forwardRow, setForwardRow] = useState<{ id: string; requester: { name: string }; typeLabel: string } | null>(null)
+  const [forwardNote, setForwardNote] = useState("")
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!openMenuId) return
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [openMenuId])
+
+  const handleAction = useCallback((action: string, row: { id: string; requester: { name: string }; typeLabel: string }) => {
+    setOpenMenuId(null)
+    switch (action) {
+      case "approve":
+        setResolved((r) => ({ ...r, [row.id]: true }))
+        toast.success("Request approved", {
+          description: `${row.requester.name} · ${row.typeLabel}`,
+        })
+        break
+      case "reject":
+        setResolved((r) => ({ ...r, [row.id]: true }))
+        toast.warning("Request declined", {
+          description: `${row.requester.name} · ${row.typeLabel}`,
+        })
+        break
+      case "details":
+        toast.info("Details requested", {
+          description: `Asked ${row.requester.name} for more information`,
+        })
+        break
+      case "forward":
+        setForwardRow(row)
+        setForwardNote("")
+        break
+    }
+  }, [toast])
 
   // TeamSvc data: members scoped by permission (own team for base
   // `team.view`, whole-home scope for `team.view.all`) plus KPI stats.
@@ -133,25 +178,82 @@ const TeamOverview: React.FC = () => {
     [members]
   )
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    return members.filter((m) => {
-      if (homeFilter !== "all" && m.home !== homeFilter) return false
-      if (statusFilter !== "all" && m.status !== statusFilter) return false
-      if (!q) return true
-      return (
-        m.name.toLowerCase().includes(q) ||
-        m.role.toLowerCase().includes(q) ||
-        m.home.toLowerCase().includes(q)
-      )
-    })
-  }, [members, query, homeFilter, statusFilter])
+  // ── Build unified request rows from approvals + swaps ──
+  type RequestRow = {
+    id: string
+    requester: { name: string; initials: string; role: string; home: string }
+    counterparty: { name: string; initials: string; home: string } | null
+    typeLabel: string
+    typeTone: string
+    summary: string
+    when: string
+    statusLabel: string
+    statusTone: string
+    canAction: boolean
+  }
 
-  const pctFor = (m: TeamMember) =>
-    Math.min(
-      Math.round((m.hoursThisWeek / Math.max(m.hoursRequired, 1)) * 100),
-      100
-    )
+  const requestRows = useMemo<RequestRow[]>(() => {
+    const rows: RequestRow[] = []
+    const q = query.trim().toLowerCase()
+
+    // Leave / overtime approvals
+    for (const a of peerApprovals) {
+      if (typeFilter === "swap") continue
+      if (homeFilter !== "all" && a.requester.home !== homeFilter) continue
+      if (q && !a.requester.name.toLowerCase().includes(q) && !a.summary.toLowerCase().includes(q)) continue
+      const rowStatus = a.status === "approved" ? "Approved" : "Pending"
+      if (approvalStatusFilter === "pending" && rowStatus !== "Pending") continue
+      if (approvalStatusFilter === "approved" && rowStatus !== "Approved") continue
+      rows.push({
+        id: a.id,
+        requester: a.requester,
+        counterparty: null,
+        typeLabel: a.kind === "leave" ? "Leave" : "Overtime",
+        typeTone: a.kind === "leave" ? "info" : "warning",
+        summary: a.summary,
+        when: a.when,
+        statusLabel: rowStatus,
+        statusTone: a.status === "approved" ? "success" : "warning",
+        canAction: a.status === "pending",
+      })
+    }
+
+    // Swap requests
+    for (const s of peerSwaps) {
+      if (typeFilter === "leave") continue
+      if (homeFilter !== "all" && s.requester.home !== homeFilter && s.counterparty.home !== homeFilter) continue
+      if (q && !s.requester.name.toLowerCase().includes(q) && !s.counterparty.name.toLowerCase().includes(q)) continue
+      const statusLabel =
+        s.status === "awaiting_teammate" ? "Pending"
+        : s.status === "accepted" ? "Approved"
+        : s.status === "declined" ? "Declined"
+        : "Cancelled"
+      if (approvalStatusFilter === "pending" && statusLabel !== "Pending") continue
+      if (approvalStatusFilter === "approved" && statusLabel !== "Approved") continue
+      const statusTone =
+        s.status === "awaiting_teammate" ? "warning"
+        : s.status === "accepted" ? "success"
+        : s.status === "declined" ? "danger"
+        : "neutral"
+      rows.push({
+        id: s.id,
+        requester: s.requester,
+        counterparty: s.counterparty,
+        typeLabel: "Swap",
+        typeTone: "neutral",
+        summary: s.summary,
+        when: s.when,
+        statusLabel,
+        statusTone,
+        canAction: s.status === "awaiting_teammate",
+      })
+    }
+
+    // Pending first, then approved, then others
+    const order = (s: string) => s === "Pending" ? 0 : s === "Approved" ? 1 : 2
+    rows.sort((a, b) => order(a.statusLabel) - order(b.statusLabel))
+    return rows
+  }, [peerApprovals, peerSwaps, query, homeFilter, typeFilter, approvalStatusFilter])
 
   const handleOverrideSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -290,118 +392,134 @@ const TeamOverview: React.FC = () => {
           ))}
         </div>
 
+        <div className="team__chips" role="group" aria-label="Type">
+          {(["all", "leave", "swap"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              className={`team__chip ${typeFilter === t ? "is-on" : ""}`}
+              onClick={() => setTypeFilter(t as TypeFilter)}
+            >
+              {t === "all" ? "All types" : t === "leave" ? "Leave / Overtime" : "Swaps"}
+            </button>
+          ))}
+        </div>
+
         <div className="team__chips" role="group" aria-label="Status">
-          {(["all", "on_shift", "off", "on_leave"] as StatusFilter[]).map((s) => (
+          {(["pending", "approved", "all"] as const).map((s) => (
             <button
               key={s}
               type="button"
-              className={`team__chip ${statusFilter === s ? "is-on" : ""}`}
-              onClick={() => setStatusFilter(s)}
+              className={`team__chip ${approvalStatusFilter === s ? "is-on" : ""}`}
+              onClick={() => setApprovalStatusFilter(s as ApprovalStatusFilter)}
             >
-              {s === "all" ? "All statuses" : STATUS_LABEL[s]}
+              {s === "all" ? "All statuses" : s === "pending" ? "Pending" : "Approved"}
             </button>
           ))}
         </div>
       </div>
 
-      {/* ── Team list ──────────────────────────────────── */}
-      <FadeIn delay={0.08}><section className="team__list card" aria-label="Team members">
+      {/* ── Requests & approvals table ─────────────────── */}
+      <FadeIn delay={0.08}><section className="team__list card" aria-label="Requests and approvals">
         <header className="team__list-head">
-          <div className="team__col team__col--who">Member</div>
-          <div className="team__col team__col--home">Home</div>
-          <div className="team__col team__col--hours">Hours this week</div>
-          <div className="team__col team__col--pending">Pending</div>
+          <div className="team__col team__col--who">Requested by</div>
+          <div className="team__col team__col--with">With member</div>
+          <div className="team__col team__col--type">Type</div>
+          <div className="team__col team__col--summary">Details</div>
           <div className="team__col team__col--status">Status</div>
-          <div className="team__col team__col--actions" />
         </header>
 
-        {filtered.length === 0 ? (
-          <div className="team__empty">No team members match those filters.</div>
+        {requestRows.length === 0 ? (
+          <div className="team__empty">No pending requests or approvals.</div>
         ) : (
           <StaggerList className="team__rows">
-            {filtered.map((m) => {
-              const pct = pctFor(m)
-              const pendingCleared = resolved[m.id]
-              const hasPending =
-                !pendingCleared && (m.leavesPending > 0 || m.swapsPending > 0)
+            {requestRows.map((row) => {
+              const isResolved = resolved[row.id]
               return (
-                <StaggerItem key={m.id} className="team__row">
+                <StaggerItem key={row.id} className="team__row">
+                  {/* Requester */}
                   <div className="team__col team__col--who">
                     <span className="team__avatar" aria-hidden="true">
-                      {m.initials}
+                      {row.requester.initials}
                     </span>
                     <div className="team__who-text">
-                      <div className="team__name">{m.name}</div>
-                      <div className="team__role">{m.role}</div>
+                      <div className="team__name">{row.requester.name}</div>
+                      <div className="team__role">{row.requester.role} · {row.requester.home}</div>
                     </div>
                   </div>
 
-                  <div className="team__col team__col--home">{m.home}</div>
-
-                  <div className="team__col team__col--hours">
-                    <div className="team__hours-bar" aria-hidden="true">
-                      <span
-                        className={`team__hours-fill ${
-                          pct >= 100
-                            ? "is-full"
-                            : pct >= 75
-                            ? "is-high"
-                            : "is-low"
-                        }`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <div className="team__hours-text">
-                      <strong>{m.hoursThisWeek}</strong>
-                      <span className="muted"> / {m.hoursRequired} h</span>
-                    </div>
-                  </div>
-
-                  <div className="team__col team__col--pending">
-                    {!hasPending ? (
-                      <span className="team__pending-none">
-                        {pendingCleared ? "Cleared" : "—"}
-                      </span>
-                    ) : (
-                      <div className="team__pending-pills">
-                        {m.leavesPending > 0 && (
-                          <span className="badge badge--info">
-                            {m.leavesPending} leave
-                          </span>
-                        )}
-                        {m.swapsPending > 0 && (
-                          <span className="badge badge--warning">
-                            {m.swapsPending} swap
-                          </span>
-                        )}
+                  {/* With member (swaps only) */}
+                  <div className="team__col team__col--with">
+                    {row.counterparty ? (
+                      <div className="team__with-member">
+                        <span className="team__avatar team__avatar--small" aria-hidden="true">
+                          {row.counterparty.initials}
+                        </span>
+                        <div className="team__who-text">
+                          <div className="team__name">{row.counterparty.name}</div>
+                          <div className="team__role">{row.counterparty.home}</div>
+                        </div>
                       </div>
+                    ) : (
+                      <span className="team__pending-none">—</span>
                     )}
                   </div>
 
-                  <div className="team__col team__col--status">
-                    <span className={`badge badge--${STATUS_TONE[m.status]}`}>
-                      {STATUS_LABEL[m.status]}
+                  {/* Type */}
+                  <div className="team__col team__col--type">
+                    <span className={`badge badge--${row.typeTone}`}>
+                      {row.typeLabel}
                     </span>
                   </div>
 
-                  <div className="team__col team__col--actions">
-                    {canReview && hasPending && (
-                      <button
-                        type="button"
-                        className="btn btn--ghost team__action"
-                        onClick={() => setReviewMember(m)}
-                      >
-                        Review
-                      </button>
-                    )}
-                    {canOverride && (
-                      <button
-                        type="button"
-                        className="btn btn--secondary team__action"
-                        onClick={() => setOverrideMember(m)}
-                      >
-                        Override
-                      </button>
+                  {/* Summary */}
+                  <div className="team__col team__col--summary">
+                    <div className="team__summary-text">{row.summary}</div>
+                    <div className="team__summary-when muted">{row.when}</div>
+                  </div>
+
+                  {/* Status + Actions dropdown */}
+                  <div
+                    className="team__col team__col--status"
+                    ref={openMenuId === row.id ? menuRef : undefined}
+                  >
+                    <div className="team__status-wrap">
+                      <span className={`badge badge--${isResolved ? "success" : row.statusTone}`}>
+                        {isResolved ? "Approved" : row.statusLabel}
+                      </span>
+                      {canReview && row.canAction && !isResolved && (
+                        <button
+                          type="button"
+                          className="team__status-arrow"
+                          aria-label="Actions"
+                          onClick={() => setOpenMenuId(openMenuId === row.id ? null : row.id)}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M4.47 5.47a.75.75 0 0 1 1.06 0L8 7.94l2.47-2.47a.75.75 0 1 1 1.06 1.06l-3 3a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 0 1 0-1.06Z" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    {openMenuId === row.id && (
+                      <div className="team__status-menu">
+                        <button type="button" className="team__menu-item team__menu-item--approve" onClick={() => handleAction("approve", row)}>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z" /></svg>
+                          Approve
+                        </button>
+                        <button type="button" className="team__menu-item team__menu-item--reject" onClick={() => handleAction("reject", row)}>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z" /></svg>
+                          Reject
+                        </button>
+                        <div className="team__menu-divider" />
+                        <button type="button" className="team__menu-item" onClick={() => handleAction("details", row)}>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25V8.5h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" /></svg>
+                          Ask for details
+                        </button>
+                        <button type="button" className="team__menu-item" onClick={() => handleAction("forward", row)}>
+                          <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8.22 2.97a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06l2.97-2.97H3.75a.75.75 0 0 1 0-1.5h7.44L8.22 4.03a.75.75 0 0 1 0-1.06Z" /></svg>
+                          Forward request
+                        </button>
+                      </div>
                     )}
                   </div>
                 </StaggerItem>
@@ -411,7 +529,8 @@ const TeamOverview: React.FC = () => {
         )}
       </section></FadeIn>
 
-      {/* ── Team activity ──────────────────────────────── */}
+      {/* ── Team activity (hidden for Senior Managers — they use the table above) ── */}
+      {!can("system.company.edit") && (
       <FadeIn delay={0.12}><section
         className="team__activity card"
         aria-label="Team activity in flight"
@@ -442,7 +561,7 @@ const TeamOverview: React.FC = () => {
                 <div className="team__activity-text">
                   <div className="team__activity-head-row">
                     <strong>{a.requester.name}</strong>
-                    <span className="muted"> · {a.requester.role}</span>
+                    <span className="muted"> · {a.requester.role} · {a.requester.home}</span>
                     <span
                       className={`badge badge--${
                         a.kind === "leave" ? "info" : "warning"
@@ -488,6 +607,7 @@ const TeamOverview: React.FC = () => {
           </StaggerList>
         )}
       </section></FadeIn>
+      )}
 
       {/* ── Override modal ─────────────────────────────── */}
       <Modal
@@ -614,6 +734,66 @@ const TeamOverview: React.FC = () => {
               </li>
             )}
           </ul>
+        )}
+      </Modal>
+
+      {/* ── Forward modal ──────────────────────────────── */}
+      <Modal
+        open={!!forwardRow}
+        onClose={() => setForwardRow(null)}
+        eyebrow="FORWARD REQUEST"
+        title={forwardRow ? `Forward — ${forwardRow.requester.name}` : "Forward request"}
+        description={forwardRow ? `${forwardRow.typeLabel} request` : undefined}
+        size="sm"
+      >
+        {forwardRow && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              const fd = new FormData(e.currentTarget)
+              const recipient = fd.get("recipient") as string
+              toast.success("Request forwarded", {
+                description: `${forwardRow.requester.name}'s request forwarded to ${recipient}`,
+              })
+              setForwardRow(null)
+            }}
+          >
+            <label className="form-field">
+              <span className="form-field__label">Forward to</span>
+              <select name="recipient" className="form-field__control" required>
+                <option value="">Select a person…</option>
+                {members
+                  .filter((m) => m.name !== forwardRow.requester.name)
+                  .map((m) => (
+                    <option key={m.id} value={m.name}>
+                      {m.name} — {m.role} · {m.home}
+                    </option>
+                  ))}
+              </select>
+            </label>
+            <label className="form-field">
+              <span className="form-field__label">Note (optional)</span>
+              <textarea
+                name="note"
+                className="form-field__control"
+                placeholder="Add context for the recipient…"
+                value={forwardNote}
+                onChange={(e) => setForwardNote(e.target.value)}
+              />
+            </label>
+            <div className="modal__form-actions">
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => setForwardRow(null)}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="btn btn--primary">
+                Forward
+              </button>
+            </div>
+          </form>
         )}
       </Modal>
     </div></PageTransition>

@@ -15,10 +15,10 @@ export type AuditChannel = "auth" | "rota" | "care" | "permissions"
  * Hierarchical domain — what the user has permission to see is organised
  * by *what kind of thing* was touched, not what module emitted the event.
  *
- *   home          — home-wide events (audits, inspections, evidence packs)
+ *   home          — home-wide events (Ofsted visits, Reg 44, evidence packs)
  *   team          — schedule/permission actions (swaps, overrides, roles)
- *   people        — notes on subjects in care (medication, care plans,
- *                   incidents flagged against a resident)
+ *   people        — notes on young people in care (placement plans, incidents,
+ *                   safeguarding flagged against a resident)
  *   professional  — individual action by a professional (clock-in, auth)
  */
 export type AuditDomain = "home" | "team" | "people" | "professional"
@@ -27,7 +27,7 @@ export type AuditEvent = {
   id: string
   at: string // ISO-ish display string
   /** Team-member id when the actor is a known user in the system.
-   *  `null` for system/external actors (scheduler, CQC, auditor SVC). */
+   *  `null` for system/external actors (scheduler, Ofsted, auditor SVC). */
   actorId: string | null
   actor: string
   actorRole: string
@@ -46,7 +46,7 @@ export const AUDIT_EVENTS: AuditEvent[] = [
     at: "2026-04-11 07:02",
     actorId: "tm-1",
     actor: "Amira O.",
-    actorRole: "HCA",
+    actorRole: "Residential Care Worker",
     action: "Clocked in",
     target: "Shift #W-8821",
     home: "Willow House",
@@ -59,8 +59,8 @@ export const AUDIT_EVENTS: AuditEvent[] = [
     at: "2026-04-11 06:48",
     actorId: "tm-4",
     actor: "Tomás R.",
-    actorRole: "Nurse",
-    action: "Logged medication given",
+    actorRole: "Senior Residential Care Worker",
+    action: "Logged waking night handover",
     target: "Subject A-1139",
     home: "Willow House",
     domain: "people",
@@ -85,7 +85,7 @@ export const AUDIT_EVENTS: AuditEvent[] = [
     at: "2026-04-11 03:14",
     actorId: "tm-2",
     actor: "Daniel T.",
-    actorRole: "HCA",
+    actorRole: "Residential Care Worker",
     action: "Logged incident",
     target: "Subject A-1137 · IN-0219",
     home: "Willow House",
@@ -124,7 +124,7 @@ export const AUDIT_EVENTS: AuditEvent[] = [
     at: "2026-04-10 18:03",
     actorId: "tm-3",
     actor: "Clara F.",
-    actorRole: "HCA",
+    actorRole: "Residential Care Worker",
     action: "Sign-in failed (bad password)",
     target: "—",
     home: "Oakmoor House",
@@ -149,7 +149,7 @@ export const AUDIT_EVENTS: AuditEvent[] = [
     id: "e9",
     at: "2026-04-10 16:12",
     actorId: null,
-    actor: "Auditor (SVC)",
+    actor: "Reg 44 Visitor",
     actorRole: "External",
     action: "Exported evidence pack",
     target: "Mar 2026 · Willow",
@@ -163,8 +163,8 @@ export const AUDIT_EVENTS: AuditEvent[] = [
     at: "2026-04-10 14:00",
     actorId: "tm-4",
     actor: "Tomás R.",
-    actorRole: "Nurse",
-    action: "Closed care plan revision",
+    actorRole: "Senior Residential Care Worker",
+    action: "Closed placement plan revision",
     target: "Subject A-1142",
     home: "Willow House",
     domain: "people",
@@ -175,10 +175,10 @@ export const AUDIT_EVENTS: AuditEvent[] = [
     id: "e11",
     at: "2026-04-10 11:20",
     actorId: null,
-    actor: "CQC Inspector",
+    actor: "Ofsted Inspector",
     actorRole: "External",
     action: "Posted compliance note",
-    target: "Oakmoor · medication procedure",
+    target: "Oakmoor · safeguarding procedure",
     home: "Oakmoor House",
     domain: "home",
     channel: "care",
@@ -189,7 +189,7 @@ export const AUDIT_EVENTS: AuditEvent[] = [
     at: "2026-04-10 09:04",
     actorId: "tm-6",
     actor: "Finn O.",
-    actorRole: "HCA",
+    actorRole: "Residential Care Worker",
     action: "Requested overtime",
     target: "+4h · Wed 16 Apr",
     home: "Oakmoor House",

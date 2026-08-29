@@ -12,8 +12,8 @@ const rolling7 = (): DaySnapshot[] => {
     days.push({
       date: iso,
       dayLabel: weekdays[d.getDay()],
-      staffOnShift: 8 + Math.floor(Math.random() * 4),
-      staffPlanned: 12,
+      staffOnShift: 3 + Math.floor(Math.random() * 3),
+      staffPlanned: 6,
       incidentsLogged: Math.floor(Math.random() * 3),
       reviewsDue: i > 0 ? Math.floor(Math.random() * 2) : 0,
     })
@@ -22,8 +22,8 @@ const rolling7 = (): DaySnapshot[] => {
 }
 
 const MOCK_KPIS_HOME: KpiCard[] = [
-  { id: "active-pros", label: "Active professionals", value: 24, delta: "2 on leave", tone: "neutral" },
-  { id: "total-clients", label: "Total clients", value: 18, delta: "1 new this week", tone: "success" },
+  { id: "active-pros", label: "Active staff", value: 8, delta: "1 on leave", tone: "neutral" },
+  { id: "total-residents", label: "Young people", value: 6, delta: "1 new this week", tone: "success" },
   { id: "reviews-due", label: "Reviews due", value: 3, delta: "2 overdue", tone: "warning" },
   { id: "incidents-open", label: "Open incidents", value: 1, delta: "logged today", tone: "danger" },
   { id: "rota-coverage", label: "Rota coverage", value: 92, delta: "next 7 days", tone: "success" },
@@ -31,17 +31,17 @@ const MOCK_KPIS_HOME: KpiCard[] = [
 ]
 
 const MOCK_KPIS_MULTI: KpiCard[] = [
-  { id: "active-pros", label: "Active professionals", value: 67, delta: "5 on leave across 3 homes", tone: "neutral" },
-  { id: "total-clients", label: "Total clients", value: 42, delta: "3 new admissions this week", tone: "success" },
+  { id: "active-pros", label: "Active staff", value: 22, delta: "3 on leave across 3 homes", tone: "neutral" },
+  { id: "total-residents", label: "Young people", value: 19, delta: "1 new placement this week", tone: "success" },
   { id: "reviews-due", label: "Reviews due", value: 8, delta: "4 overdue", tone: "warning" },
-  { id: "incidents-open", label: "Open incidents", value: 3, delta: "1 Willow, 2 Oakmoor", tone: "danger" },
+  { id: "incidents-open", label: "Open incidents", value: 3, delta: "1 Willow, 2 Rowan", tone: "danger" },
   { id: "rota-coverage", label: "Rota coverage", value: 88, delta: "across all homes", tone: "success" },
   { id: "pending-approvals", label: "Pending approvals", value: 12, delta: "7 leave, 5 swaps", tone: "neutral" },
 ]
 
 const MOCK_KPIS_TEAM: KpiCard[] = [
   { id: "on-shift", label: "Team on shift", value: 4, delta: "of 6 planned", tone: "neutral" },
-  { id: "total-clients", label: "My clients", value: 6, delta: "", tone: "neutral" },
+  { id: "total-residents", label: "My young people", value: 6, delta: "", tone: "neutral" },
   { id: "reviews-due", label: "Reviews due", value: 1, delta: "this week", tone: "warning" },
   { id: "pending-swaps", label: "Pending swaps", value: 1, delta: "awaiting response", tone: "neutral" },
 ]

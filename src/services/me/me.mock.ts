@@ -48,6 +48,8 @@ export type WorkingSnapshot = {
   leaveBalance: number // days remaining
 }
 
+// ── Shift-worker data (Care Worker, Team Lead, Deputy, Home Manager) ──
+
 export const MY_SNAPSHOT: WorkingSnapshot = {
   rangeLabel: "This week · 7 – 13 Apr",
   required: 40,
@@ -63,8 +65,8 @@ export const MY_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-04-11",
     start: "07:00",
     end: "15:00",
-    role: "HCA",
-    ward: "Willow Ward · West wing",
+    role: "Residential Care Worker",
+    ward: "Willow House · Maple Unit",
     status: "in_progress",
   },
   {
@@ -72,8 +74,8 @@ export const MY_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-04-12",
     start: "07:00",
     end: "15:00",
-    role: "HCA",
-    ward: "Willow Ward · West wing",
+    role: "Residential Care Worker",
+    ward: "Willow House · Maple Unit",
     status: "planned",
   },
   {
@@ -81,8 +83,8 @@ export const MY_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-04-13",
     start: "14:00",
     end: "22:00",
-    role: "HCA",
-    ward: "Willow Ward · East wing",
+    role: "Residential Care Worker",
+    ward: "Willow House · Oak Unit",
     status: "planned",
   },
   {
@@ -90,8 +92,8 @@ export const MY_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-04-15",
     start: "07:00",
     end: "15:00",
-    role: "HCA",
-    ward: "Oakmoor House",
+    role: "Residential Care Worker",
+    ward: "Oakmoor House · Birch Unit",
     status: "planned",
   },
 ]
@@ -118,5 +120,65 @@ export const MY_REQUESTS: MyRequest[] = [
     summary: "Annual leave · 5 – 9 May",
     when: "Submitted last week",
     status: "pending",
+  },
+]
+
+// ── Senior Manager data (Mon–Fri 9–5, no shifts/swaps) ──────────────
+
+export const SM_SNAPSHOT: WorkingSnapshot = {
+  rangeLabel: "This week · 9 – 13 Jun",
+  required: 40,
+  worked: 32,
+  overtime: 0,
+  leaveTaken: 1,
+  leaveBalance: 25,
+}
+
+export const SM_UPCOMING_SHIFTS: MyShift[] = [
+  {
+    id: "sm-s1",
+    date: "2026-06-12",
+    start: "09:00",
+    end: "17:00",
+    role: "Senior Manager",
+    ward: "Head Office",
+    status: "in_progress",
+  },
+  {
+    id: "sm-s2",
+    date: "2026-06-13",
+    start: "09:00",
+    end: "17:00",
+    role: "Senior Manager",
+    ward: "Head Office",
+    status: "planned",
+  },
+  {
+    id: "sm-s3",
+    date: "2026-06-16",
+    start: "09:00",
+    end: "17:00",
+    role: "Senior Manager",
+    ward: "Head Office",
+    status: "planned",
+  },
+  {
+    id: "sm-s4",
+    date: "2026-06-17",
+    start: "09:00",
+    end: "17:00",
+    role: "Senior Manager",
+    ward: "Head Office",
+    status: "planned",
+  },
+]
+
+export const SM_REQUESTS: MyRequest[] = [
+  {
+    id: "sm-r1",
+    kind: "leave",
+    summary: "Annual leave · 23 – 27 Jun",
+    when: "Submitted 3 days ago",
+    status: "approved",
   },
 ]

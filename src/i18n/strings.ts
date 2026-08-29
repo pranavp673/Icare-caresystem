@@ -13,7 +13,7 @@
 export const STRINGS = {
   app: {
     name: "ICare",
-    tagline: "Care home management, built for the people doing the work.",
+    tagline: "Children's home management, built for the people doing the work.",
   },
 
   nav: {
@@ -36,9 +36,9 @@ export const STRINGS = {
   auth: {
     login: {
       title: "Sign in to ICare",
-      subtitle: "Care homes · audit · rota — one login.",
+      subtitle: "Children's homes · audit · rota — one login.",
       emailLabel: "Work email",
-      emailPlaceholder: "name@carehome.org",
+      emailPlaceholder: "name@brightpathchildren.co.uk",
       passwordLabel: "Password",
       passwordPlaceholder: "••••••••",
       rememberMe: "Keep me signed in on this device",

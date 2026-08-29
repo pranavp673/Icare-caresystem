@@ -10,7 +10,7 @@ export type SubjectRow = {
   initials: string
   home: string
   keyworker: string
-  /** Lead/manager who owns the care plan. */
+  /** Lead/manager who owns the placement plan. */
   primaryOwnerId: string
   /** Staff/professional assigned day-to-day care. */
   assignedOwnerId: string

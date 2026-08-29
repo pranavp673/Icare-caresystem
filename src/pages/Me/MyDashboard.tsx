@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState, useCallback } from "react"
 import { motion } from "framer-motion"
 import "./MyDashboard.scss"
 import PageHeader from "../../components/PageHeader/PageHeader"
@@ -7,6 +7,10 @@ import { PageTransition, FadeIn, StaggerList, StaggerItem, staggerContainer, sta
 import Modal from "../../components/Modal/Modal"
 import DateTimeField from "../../components/DateTimeField/DateTimeField"
 import TeammatePicker from "../../components/TeammatePicker/TeammatePicker"
+import LeaveCalendar from "../../components/LeaveCalendar/LeaveCalendar"
+import "../../components/LeaveCalendar/LeaveCalendar.scss"
+import WheelTimePicker from "../../components/DateTimeField/WheelTimePicker"
+import "../../components/DateTimeField/WheelTimePicker.scss"
 import { useAuth } from "../../auth/AuthContext"
 import { useToast } from "../../components/Toast/ToastProvider"
 import { formatLocalDateTime } from "../../lib/format"
@@ -46,6 +50,7 @@ const prettyDate = (iso: string) =>
     day: "numeric",
     month: "short",
   })
+
 
 const progress = (snap: WorkingSnapshot) => {
   const denom = Math.max(snap.required, 1)
@@ -93,8 +98,13 @@ const leaveKindFromLabel = (label: string): LeaveKind => {
 }
 
 const MyDashboard: React.FC = () => {
-  const { user } = useAuth()
+  const { user, can } = useAuth()
   const toast = useToast()
+
+  // Manager-level users (Deputy, Home Manager, Senior) work Mon–Fri 9–5
+  // — no shifts, swaps, or rota. In practice DashboardRouter sends them
+  // to the executive dashboard, but this flag survives as belt-and-suspenders.
+  const isSenior = can("home.view")
   const [range, setRange] = useState<"week" | "month">("week")
 
   const [snap, setSnap] = useState<WorkingSnapshot | null>(null)
@@ -103,6 +113,51 @@ const MyDashboard: React.FC = () => {
   const [swapOpen, setSwapOpen] = useState(false)
   const [leaveOpen, setLeaveOpen] = useState(false)
   const [prefillShiftId, setPrefillShiftId] = useState<string | null>(null)
+
+  // Leave form state
+  type LeaveDuration = "full" | "half-am" | "half-pm" | "custom"
+  const [leaveDuration, setLeaveDuration] = useState<LeaveDuration>("full")
+  const [leaveStartDate, setLeaveStartDate] = useState("")
+  const [leaveEndDate, setLeaveEndDate] = useState("")
+  const [leaveStartTime, setLeaveStartTime] = useState("07:00")
+  const [leaveEndTime, setLeaveEndTime] = useState("15:00")
+
+  const handleLeaveDatesChange = useCallback(
+    (start: string, end: string) => {
+      setLeaveStartDate(start)
+      setLeaveEndDate(end)
+    },
+    []
+  )
+
+  // Reset leave form when modal opens/closes
+  const openLeaveModal = useCallback(() => {
+    setLeaveDuration("full")
+    setLeaveStartDate("")
+    setLeaveEndDate("")
+    setLeaveStartTime("07:00")
+    setLeaveEndTime("15:00")
+    setLeaveOpen(true)
+  }, [])
+
+  // When duration type changes, set sensible default times
+  const changeDuration = useCallback((d: LeaveDuration) => {
+    setLeaveDuration(d)
+    if (d === "half-am") {
+      setLeaveStartTime("07:00")
+      setLeaveEndTime("13:00")
+    } else if (d === "half-pm") {
+      setLeaveStartTime("13:00")
+      setLeaveEndTime("19:00")
+    } else if (d === "custom") {
+      setLeaveStartTime("07:00")
+      setLeaveEndTime("15:00")
+    }
+    // For half-day, force single date
+    if (d === "half-am" || d === "half-pm") {
+      if (leaveStartDate) setLeaveEndDate(leaveStartDate)
+    }
+  }, [leaveStartDate])
 
   // Initial load: personal snapshot + shifts + requests in parallel.
   useEffect(() => {
@@ -132,7 +187,8 @@ const MyDashboard: React.FC = () => {
   )
 
   // Pre-fill the swap modal's datetime fields from the shift the user
-  // clicked "Swap" on, falling back to "today 14:00 → today 22:00".
+  // clicked "Swap" on, falling back to the standard Day shift
+  // (07:00–15:00) — the most common pattern in our rota config.
   const { prefillFromIso, prefillToIso } = useMemo(() => {
     if (prefillShift) {
       return {
@@ -141,9 +197,9 @@ const MyDashboard: React.FC = () => {
       }
     }
     const d = new Date()
-    d.setHours(14, 0, 0, 0)
+    d.setHours(7, 0, 0, 0)
     const e = new Date(d)
-    e.setHours(22, 0, 0, 0)
+    e.setHours(15, 0, 0, 0)
     return { prefillFromIso: toLocalIso(d), prefillToIso: toLocalIso(e) }
   }, [prefillShift])
 
@@ -214,31 +270,54 @@ const MyDashboard: React.FC = () => {
   const handleLeaveSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = new FormData(e.currentTarget)
-    const start = String(form.get("start") || "")
-    const end = String(form.get("end") || "")
     const kindLabel = String(form.get("leave_kind") || "Annual leave")
     const note = String(form.get("note") || "")
+
+    if (!leaveStartDate) {
+      toast.danger("Pick a date", {
+        description: "Select at least a start date on the calendar.",
+      })
+      return
+    }
+
+    const effectiveEnd = leaveEndDate || leaveStartDate
+
+    // Build start/end with times for partial-day leaves
+    let startVal = leaveStartDate
+    let endVal = effectiveEnd
+    if (leaveDuration !== "full") {
+      startVal = `${leaveStartDate}T${leaveStartTime}`
+      endVal = `${leaveStartDate}T${leaveEndTime}`
+    }
+
+    // Duration label for summary
+    let durationLabel = ""
+    if (leaveDuration === "half-am") durationLabel = " (AM)"
+    else if (leaveDuration === "half-pm") durationLabel = " (PM)"
+    else if (leaveDuration === "custom") durationLabel = ` (${leaveStartTime}–${leaveEndTime})`
 
     void meService
       .submitLeave({
         kind: leaveKindFromLabel(kindLabel),
-        startDate: start,
-        endDate: end,
+        startDate: startVal,
+        endDate: endVal,
         note: note || undefined,
       })
       .then((created) => {
-        // Same pattern — replace the mock summary with the friendlier
-        // "Annual leave · 5 – 9 May" shape the old handler built.
+        const dateRange =
+          effectiveEnd !== leaveStartDate
+            ? `${prettyDate(leaveStartDate)} – ${prettyDate(effectiveEnd)}`
+            : prettyDate(leaveStartDate)
         const nice: MyRequest = {
           ...created,
           summary: note
-            ? `${kindLabel} · ${start} – ${end} — ${note}`
-            : `${kindLabel} · ${start} – ${end}`,
+            ? `${kindLabel}${durationLabel} · ${dateRange} — ${note}`
+            : `${kindLabel}${durationLabel} · ${dateRange}`,
         }
         setRequests((list) => [nice, ...list])
         setLeaveOpen(false)
         toast.success("Leave request submitted", {
-          description: `${start} – ${end}`,
+          description: `${dateRange}${durationLabel}`,
         })
       })
   }
@@ -251,26 +330,32 @@ const MyDashboard: React.FC = () => {
   return (
     <PageTransition><div className="my-dash">
       <PageHeader
-        eyebrow=""
-        title={`Welcome back, ${user.name.split(" ")[0]}`}
-        subtitle="Your working snapshot, next shifts, and open requests — all in one place."
+        eyebrow={isSenior ? "PERSONAL" : ""}
+        title={isSenior ? "My schedule & leave" : `Welcome back, ${user.name.split(" ")[0]}`}
+        subtitle={
+          isSenior
+            ? "Monday – Friday, 9:00 – 17:00. Request leave below."
+            : "Your working snapshot, next shifts, and open requests — all in one place."
+        }
         actions={
           <>
-            <HomeFilter />
-            <button
-              type="button"
-              className="btn btn--ghost"
-              onClick={() => {
-                setPrefillShiftId(null)
-                setSwapOpen(true)
-              }}
-            >
-              Request swap
-            </button>
+            {!isSenior && <HomeFilter />}
+            {!isSenior && (
+              <button
+                type="button"
+                className="btn btn--ghost"
+                onClick={() => {
+                  setPrefillShiftId(null)
+                  setSwapOpen(true)
+                }}
+              >
+                Request swap
+              </button>
+            )}
             <button
               type="button"
               className="btn btn--primary"
-              onClick={() => setLeaveOpen(true)}
+              onClick={openLeaveModal}
             >
               Request leave
             </button>
@@ -363,7 +448,7 @@ const MyDashboard: React.FC = () => {
       <FadeIn delay={0.1}><div className="my-dash__grid">
         <section className="card card--padded">
           <header className="section-head">
-            <h3 className="section-title">Upcoming shifts</h3>
+            <h3 className="section-title">{isSenior ? "My schedule" : "Upcoming shifts"}</h3>
             <span className="eyebrow">Next {shifts.length}</span>
           </header>
           <StaggerList className="my-dash__shifts">
@@ -393,7 +478,7 @@ const MyDashboard: React.FC = () => {
                     <span className="badge badge--neutral">Done</span>
                   )}
                 </div>
-                {s.status !== "completed" && (
+                {!isSenior && s.status !== "completed" && (
                   <button
                     type="button"
                     className="btn btn--ghost my-dash__shift-swap"
@@ -452,8 +537,8 @@ const MyDashboard: React.FC = () => {
         </section>
       </div></FadeIn>
 
-      {/* ── Swap modal ─────────────────────────────────── */}
-      <Modal
+      {/* ── Swap modal (not for Senior Manager) ─────────── */}
+      {!isSenior && <Modal
         open={swapOpen}
         onClose={() => {
           setSwapOpen(false)
@@ -514,7 +599,7 @@ const MyDashboard: React.FC = () => {
             </button>
           </div>
         </form>
-      </Modal>
+      </Modal>}
 
       {/* ── Leave modal ────────────────────────────────── */}
       <Modal
@@ -526,6 +611,7 @@ const MyDashboard: React.FC = () => {
         size="md"
       >
         <form onSubmit={handleLeaveSubmit}>
+          {/* Leave type */}
           <label className="form-field">
             <span className="form-field__label">Type</span>
             <select
@@ -539,26 +625,85 @@ const MyDashboard: React.FC = () => {
               <option>Compassionate</option>
             </select>
           </label>
-          <div className="form-row">
-            <label className="form-field">
-              <span className="form-field__label">Start date</span>
-              <input
-                type="date"
-                name="start"
-                className="form-field__control"
-                required
-              />
-            </label>
-            <label className="form-field">
-              <span className="form-field__label">End date</span>
-              <input
-                type="date"
-                name="end"
-                className="form-field__control"
-                required
-              />
-            </label>
+
+          {/* Duration type */}
+          <div className="form-field">
+            <span className="form-field__label">Duration</span>
+            <div className="leave-duration">
+              <button
+                type="button"
+                className={`leave-duration__opt ${leaveDuration === "full" ? "is-active" : ""}`}
+                onClick={() => changeDuration("full")}
+              >
+                <span className="leave-duration__label">Full day</span>
+                <span className="leave-duration__sub">All day</span>
+              </button>
+              <button
+                type="button"
+                className={`leave-duration__opt ${leaveDuration === "half-am" ? "is-active" : ""}`}
+                onClick={() => changeDuration("half-am")}
+              >
+                <span className="leave-duration__label">Half day</span>
+                <span className="leave-duration__sub">AM (07:00–13:00)</span>
+              </button>
+              <button
+                type="button"
+                className={`leave-duration__opt ${leaveDuration === "half-pm" ? "is-active" : ""}`}
+                onClick={() => changeDuration("half-pm")}
+              >
+                <span className="leave-duration__label">Half day</span>
+                <span className="leave-duration__sub">PM (13:00–19:00)</span>
+              </button>
+              <button
+                type="button"
+                className={`leave-duration__opt ${leaveDuration === "custom" ? "is-active" : ""}`}
+                onClick={() => changeDuration("custom")}
+              >
+                <span className="leave-duration__label">Custom</span>
+                <span className="leave-duration__sub">Pick times</span>
+              </button>
+            </div>
           </div>
+
+          {/* Calendar */}
+          <div className="form-field">
+            <span className="form-field__label">
+              {leaveDuration === "full" ? "Select dates" : "Select date"}
+            </span>
+            <LeaveCalendar
+              startDate={leaveStartDate}
+              endDate={leaveEndDate}
+              onChange={handleLeaveDatesChange}
+              singleDate={leaveDuration !== "full"}
+            />
+          </div>
+
+          {/* Time pickers — visible for custom hours */}
+          {leaveDuration === "custom" && (
+            <div className="form-field">
+              <span className="form-field__label">Time range</span>
+              <div className="leave-time-row">
+                <div className="leave-time-row__col">
+                  <span className="leave-time-row__label">From</span>
+                  <WheelTimePicker
+                    value={leaveStartTime}
+                    onChange={setLeaveStartTime}
+                    step={5}
+                  />
+                </div>
+                <div className="leave-time-row__col">
+                  <span className="leave-time-row__label">To</span>
+                  <WheelTimePicker
+                    value={leaveEndTime}
+                    onChange={setLeaveEndTime}
+                    step={5}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Note */}
           <label className="form-field">
             <span className="form-field__label">Note (optional)</span>
             <textarea
@@ -567,6 +712,7 @@ const MyDashboard: React.FC = () => {
               placeholder="Anything your manager should know"
             />
           </label>
+
           <div className="modal__form-actions">
             <button
               type="button"

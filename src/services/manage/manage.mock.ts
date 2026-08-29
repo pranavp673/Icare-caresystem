@@ -42,7 +42,7 @@ export const MANAGE_OVERRIDES: OverrideDraft[] = [
     start: "2026-04-11T14:00",
     end: "2026-04-11T22:00",
     home: "Willow House",
-    slot: "East wing · Senior HCA",
+    slot: "Oak Unit · Senior RCW",
     original: "Hiroki T.",
     replacement: "Daniel T.",
     reason: "sickness",
@@ -53,7 +53,7 @@ export const MANAGE_OVERRIDES: OverrideDraft[] = [
     start: "2026-04-12T07:00",
     end: "2026-04-12T15:00",
     home: "Oakmoor House",
-    slot: "Night cover · HCA",
+    slot: "Night cover · RCW",
     original: "—",
     replacement: "Clara F. (offered)",
     reason: "no_show",
@@ -64,7 +64,7 @@ export const MANAGE_OVERRIDES: OverrideDraft[] = [
     start: "2026-04-17T15:00",
     end: "2026-04-17T23:00",
     home: "Rowan Lodge",
-    slot: "Nursing · RN",
+    slot: "Senior RCW cover",
     original: "Tomás R.",
     replacement: "Agency cover",
     reason: "training",
@@ -81,10 +81,11 @@ export type ApprovalItem = {
   id: string
   kind: "leave" | "overtime"
   requesterId: string
-  requester: { name: string; initials: string; role: string }
+  requester: { name: string; initials: string; role: string; home: string }
   summary: string
   when: string
   priority: "low" | "normal" | "high"
+  status: "pending" | "approved" | "declined"
 }
 
 export const MANAGE_APPROVALS: ApprovalItem[] = [
@@ -92,28 +93,51 @@ export const MANAGE_APPROVALS: ApprovalItem[] = [
     id: "ap-2",
     kind: "leave",
     requesterId: "tm-4",
-    requester: { name: "Tomás R.", initials: "TR", role: "Nurse · Willow" },
+    requester: { name: "Tomás R.", initials: "TR", role: "Senior RCW", home: "Willow House" },
     summary: "Annual leave · 2–4 May (3 days)",
     when: "Submitted yesterday",
     priority: "normal",
+    status: "pending",
   },
   {
     id: "ap-3",
     kind: "overtime",
     requesterId: "tm-3",
-    requester: { name: "Clara F.", initials: "CF", role: "HCA · Oakmoor" },
+    requester: { name: "Clara F.", initials: "CF", role: "RCW", home: "Oakmoor House" },
     summary: "+4h cover · Wed 16 Apr",
     when: "Submitted this morning",
     priority: "high",
+    status: "pending",
   },
   {
     id: "ap-5",
     kind: "leave",
     requesterId: "tm-8",
-    requester: { name: "Beatrice M.", initials: "BM", role: "HCA · Rowan" },
+    requester: { name: "Beatrice M.", initials: "BM", role: "RCW", home: "Rowan Lodge" },
     summary: "Sick leave · Mon 13 Apr",
     when: "Submitted 1h ago",
     priority: "high",
+    status: "pending",
+  },
+  {
+    id: "ap-6",
+    kind: "leave",
+    requesterId: "tm-2",
+    requester: { name: "Daniel T.", initials: "DT", role: "RCW", home: "Willow House" },
+    summary: "Annual leave · 19–20 Jun (2 days)",
+    when: "Submitted 3d ago",
+    priority: "normal",
+    status: "approved",
+  },
+  {
+    id: "ap-7",
+    kind: "leave",
+    requesterId: "tm-6",
+    requester: { name: "Finn O.", initials: "FO", role: "RCW", home: "Oakmoor House" },
+    summary: "Sick leave · 12–16 Jun (5 days)",
+    when: "Submitted 1d ago",
+    priority: "high",
+    status: "approved",
   },
 ]
 
@@ -131,9 +155,9 @@ export const MANAGE_APPROVALS: ApprovalItem[] = [
 export type SwapActivity = {
   id: string
   requesterId: string
-  requester: { name: string; initials: string; role: string }
+  requester: { name: string; initials: string; role: string; home: string }
   counterpartyId: string
-  counterparty: { name: string; initials: string }
+  counterparty: { name: string; initials: string; home: string }
   /** ISO local datetime — start of the original shift being given up. */
   fromStart: string
   /** ISO local datetime — start of the requested replacement shift. */
@@ -147,9 +171,9 @@ export const MANAGE_SWAPS: SwapActivity[] = [
   {
     id: "sw-1",
     requesterId: "tm-1",
-    requester: { name: "Amira O.", initials: "AO", role: "HCA · Willow" },
+    requester: { name: "Amira O.", initials: "AO", role: "RCW", home: "Willow House" },
     counterpartyId: "tm-2",
-    counterparty: { name: "Daniel T.", initials: "DT" },
+    counterparty: { name: "Daniel T.", initials: "DT", home: "Willow House" },
     fromStart: "2026-04-14T07:00",
     toStart: "2026-04-16T07:00",
     summary: "Mon 14 Apr 07:00 → Wed 16 Apr 07:00",
@@ -159,9 +183,9 @@ export const MANAGE_SWAPS: SwapActivity[] = [
   {
     id: "sw-2",
     requesterId: "tm-7",
-    requester: { name: "Hiroki T.", initials: "HT", role: "HCA · Willow" },
+    requester: { name: "Hiroki T.", initials: "HT", role: "RCW", home: "Willow House" },
     counterpartyId: "tm-8",
-    counterparty: { name: "Beatrice M.", initials: "BM" },
+    counterparty: { name: "Beatrice M.", initials: "BM", home: "Willow House" },
     fromStart: "2026-04-17T14:00",
     toStart: "2026-04-19T14:00",
     summary: "Thu 17 Apr 14:00 → Sat 19 Apr 14:00",
@@ -171,14 +195,26 @@ export const MANAGE_SWAPS: SwapActivity[] = [
   {
     id: "sw-3",
     requesterId: "tm-3",
-    requester: { name: "Clara F.", initials: "CF", role: "HCA · Oakmoor" },
+    requester: { name: "Clara F.", initials: "CF", role: "RCW", home: "Oakmoor House" },
     counterpartyId: "tm-6",
-    counterparty: { name: "Finn O.", initials: "FO" },
+    counterparty: { name: "Finn O.", initials: "FO", home: "Oakmoor House" },
     fromStart: "2026-04-09T07:00",
     toStart: "2026-04-11T07:00",
     summary: "Thu 9 Apr 07:00 → Sat 11 Apr 07:00",
     when: "Accepted yesterday",
     status: "accepted",
+  },
+  {
+    id: "sw-4",
+    requesterId: "tm-1",
+    requester: { name: "Amira O.", initials: "AO", role: "RCW", home: "Willow House" },
+    counterpartyId: "tm-3",
+    counterparty: { name: "Clara F.", initials: "CF", home: "Oakmoor House" },
+    fromStart: "2026-06-18T07:00",
+    toStart: "2026-06-20T07:00",
+    summary: "Thu 18 Jun 07:00 → Sat 20 Jun 07:00",
+    when: "Sent 1d ago",
+    status: "awaiting_teammate",
   },
 ]
 
@@ -198,7 +234,7 @@ export const MANAGE_PERMISSIONS: PermissionRow[] = [
     name: "Daniel T.",
     initials: "DT",
     accessLevel: "team_lead",
-    scope: "Willow · West wing",
+    scope: "Willow · Maple Unit",
     lastChanged: "12 Mar 2026 by Priya A.",
   },
   {
@@ -206,7 +242,7 @@ export const MANAGE_PERMISSIONS: PermissionRow[] = [
     name: "Tomás R.",
     initials: "TR",
     accessLevel: "team_lead",
-    scope: "Willow · Nursing",
+    scope: "Willow · Oak Unit",
     lastChanged: "28 Feb 2026 by Priya A.",
   },
   {
@@ -214,7 +250,7 @@ export const MANAGE_PERMISSIONS: PermissionRow[] = [
     name: "Priya A.",
     initials: "PA",
     accessLevel: "home_manager",
-    scope: "Willow · All wards",
+    scope: "Willow · All units",
     lastChanged: "04 Jan 2026 by Sam O.",
   },
   {

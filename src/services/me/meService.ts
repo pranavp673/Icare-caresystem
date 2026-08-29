@@ -6,7 +6,15 @@
  * list for display.
  */
 import { mockResponse } from "../gateway/gatewayClient"
-import { MY_SNAPSHOT, MY_UPCOMING_SHIFTS, MY_REQUESTS } from "./me.mock"
+import {
+  MY_SNAPSHOT,
+  MY_UPCOMING_SHIFTS,
+  MY_REQUESTS,
+  SM_SNAPSHOT,
+  SM_UPCOMING_SHIFTS,
+  SM_REQUESTS,
+} from "./me.mock"
+import { findMockUser } from "../../auth/user"
 import type {
   CreateLeaveRequest,
   CreateOvertimeRequest,
@@ -17,27 +25,62 @@ import type {
   WorkingSnapshot,
 } from "./me.types"
 
+/** Return the current mock user, or null if none stored. */
+const currentMockUser = () => {
+  const stored =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem("icare.user")
+      : null
+  return stored ? findMockUser(stored) : undefined
+}
+
+/**
+ * Check if the current user is manager-level (Mon–Fri 9–5, no rota).
+ * Deputy Manager, Home Manager, and Senior Manager all have `home.view`.
+ * They share the same personal schedule shape — the dashboard scope
+ * differs but is handled in the component via `user.homes`.
+ */
+const isManagerLevel = (): boolean => {
+  const u = currentMockUser()
+  return !!u && u.permissions.includes("home.view")
+}
+
 export const getSnapshot = (
   range: SnapshotRange = "week"
 ): Promise<WorkingSnapshot> => {
   // TODO(integration): GET /api/me/snapshot?range=${range}
   void range
-  return mockResponse(MY_SNAPSHOT)
+  return mockResponse(isManagerLevel() ? SM_SNAPSHOT : MY_SNAPSHOT)
 }
 
 export const getUpcomingShifts = (limit = 4): Promise<MyShift[]> => {
   // TODO(integration): GET /api/me/upcoming-shifts?limit=${limit}
-  return mockResponse(MY_UPCOMING_SHIFTS.slice(0, limit))
+  if (!isManagerLevel()) {
+    return mockResponse(MY_UPCOMING_SHIFTS.slice(0, limit))
+  }
+  // Manager-level: derive Mon–Fri 9–5 schedule with the user's role & home
+  const u = currentMockUser()!
+  const roleLabel = u.roleLabel.split("·")[0].trim()
+  const ward = u.permissions.includes("system.company.edit")
+    ? "Head Office"
+    : u.primaryHome.name
+  const shifts = SM_UPCOMING_SHIFTS.map((s) => ({
+    ...s,
+    role: roleLabel,
+    ward,
+  }))
+  return mockResponse(shifts.slice(0, limit))
 }
 
 export const getMyRequests = (
   status: RequestsFilter = "open"
 ): Promise<MyRequest[]> => {
   // TODO(integration): GET /api/me/requests?status=${status}
+  const all = isManagerLevel() ? SM_REQUESTS : MY_REQUESTS
   const data =
     status === "all"
-      ? MY_REQUESTS
-      : MY_REQUESTS.filter(
+      ? all
+      : all.filter(
           (r) => r.status === "pending" || r.status === "awaiting_teammate"
         )
   return mockResponse(data)

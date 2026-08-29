@@ -48,8 +48,8 @@ const statusTone: Record<ClientStatus, "neutral" | "success" | "warning" | "info
 
 const kindLabel: Record<ServiceEventKind, string> = {
   admission: "Admission",
-  care_plan: "Care plan",
-  medication_review: "Medication",
+  placement_plan: "Placement plan",
+  health_review: "Health review",
   incident: "Incident",
   appointment: "Appointment",
   note: "Note",

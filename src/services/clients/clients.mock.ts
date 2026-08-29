@@ -8,7 +8,7 @@
  *
  * On the real backend this data is the composition of two domains:
  *   • HomeSvc (who lives where, basic demographics)
- *   • CareSvc (care plan, medication, incidents, notes)
+ *   • CareSvc (placement plan, risk assessments, incidents, notes)
  * ClientsSvc is the gateway aggregator that returns a single merged
  * row per client so the UI doesn't have to fan out on every render.
  */
@@ -49,8 +49,8 @@ export type ClientComment = {
 
 export type ServiceEventKind =
   | "admission"
-  | "care_plan"
-  | "medication_review"
+  | "placement_plan"
+  | "health_review"
   | "incident"
   | "appointment"
   | "note"
@@ -69,108 +69,108 @@ const PROFILE_DETAIL: Record<
   Omit<ClientProfile, keyof SubjectRow>
 > = {
   s1: {
-    dateOfBirth: "1945-03-18",
-    age: 81,
+    dateOfBirth: "2012-03-18",
+    age: 14,
     primaryContact: {
-      name: "Miriam K.",
-      relation: "Daughter",
+      name: "Karen Langford",
+      relation: "Social Worker",
       phone: "+44 7700 900018",
     },
-    admissionDate: "2023-02-14",
+    admissionDate: "2024-09-14",
     roomNumber: "W-102",
     summary:
-      "Stable; mild arthritis managed with scheduled paracetamol. Prefers morning walks in the garden courtyard when weather allows.",
+      "Settled well. Behavioural support plan in place — responding positively to key-worker sessions. Attending school regularly, Year 9.",
   },
   s2: {
-    dateOfBirth: "1938-11-02",
-    age: 87,
+    dateOfBirth: "2010-11-02",
+    age: 15,
     primaryContact: {
-      name: "Geoff M.",
-      relation: "Son",
+      name: "Marcus Hale",
+      relation: "Social Worker",
       phone: "+44 7700 900139",
     },
-    admissionDate: "2021-09-03",
+    admissionDate: "2023-06-03",
     roomNumber: "W-215",
     summary:
-      "Care plan review overdue (14 days). Advanced dementia; one-to-one at mealtimes required and night-time orientation cues.",
+      "Placement plan review overdue (14 days). Emotional and behavioural difficulties (EBD); one-to-one support at transitions required. LAC review due.",
   },
   s3: {
-    dateOfBirth: "1952-06-27",
-    age: 73,
+    dateOfBirth: "2013-06-27",
+    age: 12,
     primaryContact: {
-      name: "Mei Wei",
-      relation: "Spouse",
+      name: "Li Wei",
+      relation: "Parent",
       phone: "+44 7700 900138",
     },
-    admissionDate: "2024-07-12",
+    admissionDate: "2025-07-12",
     roomNumber: "W-109",
     summary:
-      "Post-stroke rehabilitation. Mobility improving week-on-week. Weekly physio scheduled Tues + Thurs.",
+      "Short-term placement for family support. Emotional wellbeing improving. Weekly therapeutic sessions Tues + Thurs.",
   },
   s4: {
-    dateOfBirth: "1940-01-12",
-    age: 86,
+    dateOfBirth: "2009-01-12",
+    age: 17,
     primaryContact: {
-      name: "Ola P.",
-      relation: "Niece",
+      name: "Fiona Marsh",
+      relation: "Social Worker",
       phone: "+44 7700 900137",
     },
-    admissionDate: "2022-05-30",
+    admissionDate: "2023-05-30",
     roomNumber: "W-221",
     summary:
-      "Care plan revision in progress. Type-2 diabetes — low-sugar diet and post-meal blood glucose checks.",
+      "Pathway plan revision in progress — preparing for semi-independent living. Education: attending college, Level 2 course.",
   },
   s5: {
-    dateOfBirth: "1947-09-09",
-    age: 78,
+    dateOfBirth: "2014-09-09",
+    age: 11,
     primaryContact: {
-      name: "Javier R.",
-      relation: "Son",
+      name: "Rosa Reyes",
+      relation: "Placing Authority",
       phone: "+44 7700 900136",
     },
-    admissionDate: "2023-11-25",
+    admissionDate: "2025-01-25",
     roomNumber: "O-104",
     summary:
-      "Stable. Enjoys reading group on Wednesdays. Low-dose anticoagulant monitored monthly.",
+      "Stable placement. Enjoys art group on Wednesdays. Good peer relationships developing. PEP review upcoming.",
   },
   s6: {
-    dateOfBirth: "1955-04-22",
-    age: 70,
+    dateOfBirth: "2016-04-22",
+    age: 10,
     primaryContact: {
-      name: "Ailís O.",
-      relation: "Daughter",
+      name: "Siobhán O'Donnell",
+      relation: "Social Worker",
       phone: "+44 7700 900135",
     },
     admissionDate: "2026-03-28",
     roomNumber: "O-210",
     summary:
-      "New admission — still settling in. Familiarising with the morning routine and keyworker.",
+      "New admission — still settling in. Building trust with key-worker. Familiarising with house routines and school.",
   },
   s7: {
-    dateOfBirth: "1943-12-08",
-    age: 82,
+    dateOfBirth: "2011-12-08",
+    age: 14,
     primaryContact: {
-      name: "Arthur I.",
-      relation: "Husband",
+      name: "Janet Irwin",
+      relation: "Parent",
       phone: "+44 7700 900134",
     },
-    admissionDate: "2024-01-19",
+    admissionDate: "2025-01-19",
     roomNumber: "W-207",
     summary:
-      "Transitioning from day-care to full residency. Daughter visits weekly; care plan re-balancing in progress.",
+      "Transitioning from respite to full-time placement. Parent visits fortnightly; placement plan being updated for long-term support.",
   },
   s8: {
-    dateOfBirth: "1949-08-15",
-    age: 76,
+    dateOfBirth: "2013-08-15",
+    age: 12,
     primaryContact: {
-      name: "Yuka T.",
-      relation: "Wife",
+      name: "Yuka Tanaka",
+      relation: "Parent",
       phone: "+44 7700 900133",
     },
-    admissionDate: "2022-12-07",
+    admissionDate: "2024-12-07",
     roomNumber: "W-118",
     summary:
-      "Stable, Parkinson's managed with scheduled medication windows. Enjoys music therapy sessions.",
+      "Stable; ADHD managed with structured daily routine. Enjoys music sessions and outdoor activities. School attendance good.",
   },
 }
 
@@ -188,7 +188,7 @@ export const CLIENT_COMMENTS: ClientComment[] = [
     author: "Priya A.",
     authorRole: "Home Manager",
     at: "2026-04-10 16:40",
-    body: "Ashanti mentioned knee pain again this morning. Let's review with the GP at the next visit.",
+    body: "Ashanti had a difficult afternoon — got into a disagreement with a peer. Key-worker session booked for tomorrow morning.",
     parentId: null,
   },
   {
@@ -196,9 +196,9 @@ export const CLIENT_COMMENTS: ClientComment[] = [
     clientId: "s1",
     authorId: "tm-1",
     author: "Amira O.",
-    authorRole: "HCA",
+    authorRole: "Residential Care Worker",
     at: "2026-04-10 17:05",
-    body: "Noted — she also mentioned it during afternoon tea. I'll flag it in the handover notes.",
+    body: "Noted — she was calmer by tea time. I'll make sure the morning handover covers it.",
     parentId: "cc-1",
   },
   {
@@ -208,7 +208,7 @@ export const CLIENT_COMMENTS: ClientComment[] = [
     author: "Priya A.",
     authorRole: "Home Manager",
     at: "2026-04-10 17:20",
-    body: "Thanks Amira. GP visit is Thursday — I'll add it to the agenda.",
+    body: "Thanks Amira. Social worker visit is Thursday — I'll flag the pattern in the review.",
     parentId: "cc-1",
   },
   {
@@ -216,9 +216,9 @@ export const CLIENT_COMMENTS: ClientComment[] = [
     clientId: "s1",
     authorId: "tm-1",
     author: "Amira O.",
-    authorRole: "HCA",
+    authorRole: "Residential Care Worker",
     at: "2026-04-09 09:12",
-    body: "Morning walk went well — 12 minutes, no assistance required.",
+    body: "Great morning — Ashanti got ready for school independently and left on time. Positive start.",
     parentId: null,
   },
   {
@@ -226,9 +226,9 @@ export const CLIENT_COMMENTS: ClientComment[] = [
     clientId: "s2",
     authorId: "tm-4",
     author: "Tomás R.",
-    authorRole: "Nurse",
+    authorRole: "Senior Residential Care Worker",
     at: "2026-04-11 06:50",
-    body: "Logged scheduled 06:30 medication. No missed doses overnight.",
+    body: "Quiet night. Beatrice settled by 22:00 — no waking incidents. Morning routine went smoothly.",
     parentId: null,
   },
   {
@@ -236,9 +236,9 @@ export const CLIENT_COMMENTS: ClientComment[] = [
     clientId: "s2",
     authorId: "tm-2",
     author: "Daniel T.",
-    authorRole: "HCA",
+    authorRole: "Residential Care Worker",
     at: "2026-04-10 22:05",
-    body: "Night-time orientation routine worked well tonight — no wandering.",
+    body: "Evening routine went well — Beatrice engaged in the group activity and went to her room voluntarily at bedtime.",
     parentId: null,
   },
   {
@@ -248,7 +248,7 @@ export const CLIENT_COMMENTS: ClientComment[] = [
     author: "Priya A.",
     authorRole: "Home Manager",
     at: "2026-04-11 07:15",
-    body: "Good to hear. Let's keep tracking this — three consecutive good nights means we can reduce the check frequency.",
+    body: "Good to hear. Let's keep tracking this — three consecutive good evenings supports the updated behaviour plan.",
     parentId: "cc-4",
   },
   {
@@ -256,9 +256,9 @@ export const CLIENT_COMMENTS: ClientComment[] = [
     clientId: "s4",
     authorId: "tm-2",
     author: "Daniel T.",
-    authorRole: "HCA",
+    authorRole: "Residential Care Worker",
     at: "2026-04-11 03:20",
-    body: "Brief dizziness event during 03:00 check. Blood pressure normal on re-test. Monitoring.",
+    body: "Daria was unsettled during waking night check — said she couldn't sleep. Talked briefly, settled by 03:45.",
     parentId: null,
   },
   {
@@ -266,9 +266,9 @@ export const CLIENT_COMMENTS: ClientComment[] = [
     clientId: "s4",
     authorId: "tm-4",
     author: "Tomás R.",
-    authorRole: "Nurse",
+    authorRole: "Senior Residential Care Worker",
     at: "2026-04-11 06:45",
-    body: "Reviewed — BP stable at 06:30 check. Will keep an eye during day shift. Could be positional.",
+    body: "Noted — she's been anxious about her pathway plan meeting. Will check in during day shift.",
     parentId: "cc-5",
   },
   {
@@ -278,7 +278,7 @@ export const CLIENT_COMMENTS: ClientComment[] = [
     author: "Priya A.",
     authorRole: "Home Manager",
     at: "2026-04-08 11:15",
-    body: "Family visit scheduled for next Saturday — please confirm visiting slot on the board.",
+    body: "Social worker visit scheduled for next Tuesday — please ensure Elena's PEP review paperwork is ready.",
     parentId: null,
   },
   {
@@ -286,164 +286,38 @@ export const CLIENT_COMMENTS: ClientComment[] = [
     clientId: "s6",
     authorId: "tm-3",
     author: "Clara F.",
-    authorRole: "HCA",
+    authorRole: "Residential Care Worker",
     at: "2026-04-11 08:30",
-    body: "Settling well into the morning routine. First group breakfast today.",
+    body: "Finn settling well — joined the group for breakfast for the first time today. Building rapport with key-worker.",
     parentId: null,
   },
 ]
 
 export const CLIENT_SERVICE_HISTORY: ServiceEvent[] = [
   // s1 — Ashanti
-  {
-    id: "se-1",
-    clientId: "s1",
-    at: "2023-02-14",
-    kind: "admission",
-    summary: "Admitted to Willow House West wing",
-    by: "Priya A.",
-  },
-  {
-    id: "se-2",
-    clientId: "s1",
-    at: "2025-11-30",
-    kind: "care_plan",
-    summary: "Care plan annual review · mobility goals updated",
-    by: "Tomás R.",
-  },
-  {
-    id: "se-3",
-    clientId: "s1",
-    at: "2026-04-10",
-    kind: "note",
-    summary: "Closed care plan revision (stable)",
-    by: "Tomás R.",
-  },
+  { id: "se-1", clientId: "s1", at: "2024-09-14", kind: "admission", summary: "Placed at Willow House · Maple Unit", by: "Priya A." },
+  { id: "se-2", clientId: "s1", at: "2025-11-30", kind: "placement_plan", summary: "Placement plan review — education and behaviour goals updated", by: "Tomás R." },
+  { id: "se-3", clientId: "s1", at: "2026-04-10", kind: "note", summary: "Key-worker session completed — stable progress", by: "Amira O." },
   // s2 — Beatrice
-  {
-    id: "se-4",
-    clientId: "s2",
-    at: "2021-09-03",
-    kind: "admission",
-    summary: "Admitted to Willow House East wing",
-    by: "Priya A.",
-  },
-  {
-    id: "se-5",
-    clientId: "s2",
-    at: "2026-03-28",
-    kind: "medication_review",
-    summary: "Quarterly medication review completed",
-    by: "Tomás R.",
-  },
-  {
-    id: "se-6",
-    clientId: "s2",
-    at: "2026-04-11",
-    kind: "medication_review",
-    summary: "Scheduled 06:30 medication administered",
-    by: "Tomás R.",
-  },
+  { id: "se-4", clientId: "s2", at: "2023-06-03", kind: "admission", summary: "Placed at Willow House · Oak Unit", by: "Priya A." },
+  { id: "se-5", clientId: "s2", at: "2026-03-28", kind: "health_review", summary: "Quarterly LAC health review completed", by: "Tomás R." },
+  { id: "se-6", clientId: "s2", at: "2026-04-11", kind: "note", summary: "Positive evening routine — updated behaviour plan notes", by: "Daniel T." },
   // s3 — Chen Wei
-  {
-    id: "se-7",
-    clientId: "s3",
-    at: "2024-07-12",
-    kind: "admission",
-    summary: "Admitted post-stroke for rehabilitation",
-    by: "Priya A.",
-  },
-  {
-    id: "se-8",
-    clientId: "s3",
-    at: "2026-04-09",
-    kind: "appointment",
-    summary: "Weekly physiotherapy session",
-    by: "External · Physio",
-  },
+  { id: "se-7", clientId: "s3", at: "2025-07-12", kind: "admission", summary: "Short-term placement for family support", by: "Priya A." },
+  { id: "se-8", clientId: "s3", at: "2026-04-09", kind: "appointment", summary: "Weekly therapeutic session with CAMHS", by: "External · Therapist" },
   // s4 — Daria
-  {
-    id: "se-9",
-    clientId: "s4",
-    at: "2022-05-30",
-    kind: "admission",
-    summary: "Admitted to Willow House",
-    by: "Priya A.",
-  },
-  {
-    id: "se-10",
-    clientId: "s4",
-    at: "2026-04-11",
-    kind: "incident",
-    summary: "Brief dizziness during 03:00 check — monitored, BP normal",
-    by: "Daniel T.",
-  },
+  { id: "se-9", clientId: "s4", at: "2023-05-30", kind: "admission", summary: "Placed at Willow House", by: "Priya A." },
+  { id: "se-10", clientId: "s4", at: "2026-04-11", kind: "incident", summary: "Unsettled during waking night — anxiety about pathway plan, supported", by: "Daniel T." },
   // s5 — Elena
-  {
-    id: "se-11",
-    clientId: "s5",
-    at: "2023-11-25",
-    kind: "admission",
-    summary: "Admitted to Oakmoor House",
-    by: "Priya A.",
-  },
-  {
-    id: "se-12",
-    clientId: "s5",
-    at: "2026-04-05",
-    kind: "medication_review",
-    summary: "Monthly anticoagulant levels within range",
-    by: "Tomás R.",
-  },
+  { id: "se-11", clientId: "s5", at: "2025-01-25", kind: "admission", summary: "Placed at Oakmoor House", by: "Priya A." },
+  { id: "se-12", clientId: "s5", at: "2026-04-05", kind: "health_review", summary: "PEP review — good school progress noted", by: "Tomás R." },
   // s6 — Finn
-  {
-    id: "se-13",
-    clientId: "s6",
-    at: "2026-03-28",
-    kind: "admission",
-    summary: "New admission — Oakmoor House",
-    by: "Priya A.",
-  },
-  {
-    id: "se-14",
-    clientId: "s6",
-    at: "2026-04-05",
-    kind: "care_plan",
-    summary: "Initial care plan drafted with family",
-    by: "Priya A.",
-  },
+  { id: "se-13", clientId: "s6", at: "2026-03-28", kind: "admission", summary: "New placement — Oakmoor House", by: "Priya A." },
+  { id: "se-14", clientId: "s6", at: "2026-04-05", kind: "placement_plan", summary: "Initial placement plan drafted with social worker", by: "Priya A." },
   // s7 — Grace
-  {
-    id: "se-15",
-    clientId: "s7",
-    at: "2024-01-19",
-    kind: "admission",
-    summary: "Day-care admission, Willow House",
-    by: "Priya A.",
-  },
-  {
-    id: "se-16",
-    clientId: "s7",
-    at: "2026-04-07",
-    kind: "note",
-    summary: "Transition to full residency approved",
-    by: "Priya A.",
-  },
+  { id: "se-15", clientId: "s7", at: "2025-01-19", kind: "admission", summary: "Respite placement, Willow House", by: "Priya A." },
+  { id: "se-16", clientId: "s7", at: "2026-04-07", kind: "note", summary: "Transition to full-time placement approved by placing authority", by: "Priya A." },
   // s8 — Hiroki
-  {
-    id: "se-17",
-    clientId: "s8",
-    at: "2022-12-07",
-    kind: "admission",
-    summary: "Admitted to Willow House West wing",
-    by: "Priya A.",
-  },
-  {
-    id: "se-18",
-    clientId: "s8",
-    at: "2026-04-10",
-    kind: "appointment",
-    summary: "Music therapy session attended",
-    by: "External · Therapist",
-  },
+  { id: "se-17", clientId: "s8", at: "2024-12-07", kind: "admission", summary: "Placed at Willow House · Maple Unit", by: "Priya A." },
+  { id: "se-18", clientId: "s8", at: "2026-04-10", kind: "appointment", summary: "Music therapy session attended", by: "External · Therapist" },
 ]

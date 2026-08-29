@@ -1,7 +1,7 @@
 /**
  * ClientsSvc types. The service aggregates per-client detail across
- * HomeSvc (who lives where) and CareSvc (care plan, medication, incidents,
- * notes) so the UI doesn't have to fan out on every render.
+ * HomeSvc (who lives where) and CareSvc (placement plan, safeguarding,
+ * incidents, notes) so the UI doesn't have to fan out on every render.
  *
  * The public types are re-exported from the mock so pages can depend on
  * the service barrel alone and never touch the mock file directly.

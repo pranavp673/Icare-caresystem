@@ -16,9 +16,9 @@ export const DOMAIN_LABEL: Record<AuditDomain, string> = {
 }
 
 export const DOMAIN_HINT: Record<AuditDomain, string> = {
-  home: "Inspections, evidence packs, and home-wide compliance.",
+  home: "Ofsted visits, Reg 44, evidence packs, and home-wide compliance.",
   team: "Rota changes, swaps, overrides, and permission updates.",
-  people: "Care plan, medication, and incident notes on residents.",
+  people: "Placement plans, safeguarding, and incident notes on young people.",
   professional: "Individual actions — clock-ins, auth, requests.",
 }
 

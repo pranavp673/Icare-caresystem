@@ -39,7 +39,7 @@ const AppShell: React.FC = () => {
   const [isMobile, setIsMobile] = useState(false)
   const [isGroupCollapsed, toggleGroup] = useNavGroupCollapse()
   const location = useLocation()
-  const { user, switchDemoUser } = useAuth()
+  const { user, switchDemoUser, can } = useAuth()
   const toast = useToast()
 
   // Track mobile breakpoint so the topbar toggle can switch behaviour.
@@ -94,9 +94,17 @@ const AppShell: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Nav groups ── */}
+        {/* ── Nav groups (filtered by current user's permissions) ── */}
         <nav className="app-sidebar__nav">
-          {NAV_GROUPS.map((group) => {
+          {NAV_GROUPS
+            .map((group) => ({
+              ...group,
+              items: group.items.filter(
+                (item) => !item.requiredPerms?.length || item.requiredPerms.some((p) => can(p))
+              ),
+            }))
+            .filter((group) => group.items.length > 0)
+            .map((group) => {
             const groupHidden = isGroupCollapsed(group.id)
             return (
               <div key={group.id} className="app-sidebar__group">
