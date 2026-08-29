@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
-import "./SeniorDashboard.scss"
+import "./ExecutiveDashboard.scss"
 import PageHeader from "../../components/PageHeader/PageHeader"
 import {
   PageTransition,
@@ -19,18 +19,19 @@ import {
   MOCK_PENDING,
   MOCK_STAFF_ON_DUTY,
   MOCK_TODAY_EVENTS,
-} from "./senior.mock"
-import type { HomeHealth, Escalation, IncidentSeverity, StaffOnDuty, TodayEvent } from "./senior.mock"
+} from "./executive.mock"
+import type { HomeHealth, Escalation, IncidentSeverity, StaffOnDuty, TodayEvent } from "./executive.mock"
 
 /**
- * Executive dashboard for manager-level users (Deputy, Home Manager, Senior).
+ * Executive dashboard for manager-tier users (Deputy Manager, Registered
+ * Manager, RI, System Admin).
  *
  * Not a personal schedule view — this is an operational command centre.
  * Shows at-a-glance health of the user's home(s), escalations requiring
  * attention, and pending approval queue. Automatically scoped by the
  * signed-in user's `homes` array:
- *   - Senior Manager → all homes
- *   - Home Manager / Deputy → their assigned home(s)
+ *   - RI / System Admin → all homes (multi-home layout)
+ *   - Registered Manager / Deputy Manager → their single home (always — see auth/user.ts)
  */
 
 // ── Helpers ────────────────────────────────────────────
@@ -103,13 +104,16 @@ const hasCritical = (h: HomeHealth): boolean =>
 
 // ── Component ──────────────────────────────────────────
 
-const SeniorDashboard: React.FC = () => {
-  const { user, can } = useAuth()
+const ExecutiveDashboard: React.FC = () => {
+  const { user } = useAuth()
   const [expandedHome, setExpandedHome] = useState<string | null>(null)
 
   // Scope data to the user's homes
   const userHomeIds = useMemo(() => new Set(user.homes.map((h) => h.id)), [user.homes])
-  const isSenior = can("system.company.edit")
+  // Registered Manager/Deputy Manager are always single-home, RI/System Admin
+  // are always multi-home (see auth/user.ts) — homes.length is a reliable proxy,
+  // so no separate permission check is needed here.
+  const isMultiHome = user.homes.length > 1
 
   const homes = useMemo(
     () => MOCK_HOME_HEALTH.filter((h) => userHomeIds.has(h.id)),
@@ -156,7 +160,7 @@ const SeniorDashboard: React.FC = () => {
     <PageTransition>
       <div className="sr-dash">
         <PageHeader
-          eyebrow={isSenior ? "SENIOR MANAGEMENT" : "HOME MANAGEMENT"}
+          eyebrow={isMultiHome ? "ALL-HOMES OVERSIGHT" : "HOME MANAGEMENT"}
           title={`Good morning, ${user.name.split(" ")[0]}`}
           subtitle={
             totals.homeCount > 1
@@ -560,4 +564,4 @@ const TodaySchedulePanel: React.FC<{ homeId: string }> = ({ homeId }) => {
   )
 }
 
-export default SeniorDashboard
+export default ExecutiveDashboard

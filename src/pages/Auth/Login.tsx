@@ -11,8 +11,8 @@ import type { MockUser } from "../../auth/user"
  * AUTH-001 — Sign in.
  *
  * In the mock phase the Login page doubles as a demo user picker: the
- * five tiered mock users are shown as clickable cards so reviewers can
- * experience the system from Care Worker through System Admin without
+ * six tiered mock users are shown as clickable cards so reviewers can
+ * experience the system from RSW through System Admin without
  * remembering credentials. Clicking a card writes the chosen user id
  * into localStorage (`icare.user`) and navigates to the app shell,
  * which bootstraps AuthContext from the stored identity.
@@ -24,34 +24,34 @@ import type { MockUser } from "../../auth/user"
 /** Short human-readable summaries of what each tier can do. */
 const TIER_LABELS: Record<string, { tier: string; color: string; summary: string }> = {
   "u-pro": {
-    tier: "Tier 4",
+    tier: "Tier 5",
     color: "#22c55e",
     summary: "Own schedule, timesheets, read residents, write comments",
   },
   "u-tl": {
-    tier: "Tier 3",
+    tier: "Tier 4",
     color: "#3b82f6",
     summary: "Team schedules, rota view, manage hub, residents",
   },
   "u-ad": {
-    tier: "Tier 2",
+    tier: "Tier 3",
     color: "#a855f7",
     summary: "Mon–Fri 9–5 · Home dashboard, approve variances, audit log",
   },
   "u-hm": {
-    tier: "Tier 1",
+    tier: "Tier 3",
     color: "#f59e0b",
     summary: "Mon–Fri 9–5 · Full authority for Willow House — dashboard, teams, audit",
   },
   "u-sm": {
-    tier: "Super",
+    tier: "Tier 2",
     color: "#e11d48",
-    summary: "Everything — all homes, all operations, plus system admin",
+    summary: "All homes — view & audit oversight, no write or approval access",
   },
   "u-sys": {
-    tier: "Admin",
+    tier: "Tier 1",
     color: "#ef4444",
-    summary: "System config, master data, no operational write access",
+    summary: "Everything — all homes, all operations, plus system config",
   },
 }
 
@@ -155,7 +155,7 @@ const Login: React.FC = () => {
             <p>
               <strong>Permissions, not roles</strong> — the sidebar, buttons, and pages you see
               are controlled by a flat permission list. Higher tiers accumulate more permissions;
-              System Admin has a separate set for configuration only.
+              System Admin holds every permission in the system.
             </p>
           </div>
         </div>

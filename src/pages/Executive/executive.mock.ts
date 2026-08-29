@@ -1,5 +1,5 @@
 /**
- * Mock data for the Senior Manager executive dashboard.
+ * Mock data for the Executive dashboard.
  *
  * In production these would come from aggregated API endpoints:
  *   GET /api/homes/health      → per-home staffing + incident summary
@@ -22,7 +22,7 @@ export type HomeHealth = {
   incidentCount: number
   /** Breakdown by severity. */
   incidents: { severity: IncidentSeverity; count: number }[]
-  /** Items escalated to senior manager. */
+  /** Items escalated to the executive viewing this dashboard. */
   escalations: number
   /** Pending approvals (leave, overtime, etc). */
   pendingApprovals: number
@@ -217,23 +217,23 @@ export type StaffOnDuty = {
 
 export const MOCK_STAFF_ON_DUTY: Record<string, StaffOnDuty[]> = {
   "home-willow": [
-    { id: "tm-1", name: "Amira O.", initials: "AO", role: "RCW", shift: "07:00 – 15:00", status: "on_shift" },
-    { id: "tm-2", name: "Daniel T.", initials: "DT", role: "RCW", shift: "07:00 – 15:00", status: "on_shift" },
-    { id: "tm-4", name: "Tomás R.", initials: "TR", role: "Senior RCW", shift: "07:00 – 15:00", status: "on_break" },
-    { id: "tm-7", name: "Hiroki T.", initials: "HT", role: "RCW", shift: "14:00 – 22:00", status: "arriving" },
-    { id: "tm-8", name: "Beatrice M.", initials: "BM", role: "RCW", shift: "14:00 – 22:00", status: "arriving" },
-    { id: "tm-6", name: "Finn O.", initials: "FO", role: "RCW", shift: "—", status: "on_leave" },
+    { id: "tm-1", name: "Amira O.", initials: "AO", role: "RSW", shift: "07:00 – 15:00", status: "on_shift" },
+    { id: "tm-2", name: "Daniel T.", initials: "DT", role: "RSW", shift: "07:00 – 15:00", status: "on_shift" },
+    { id: "tm-4", name: "Tomás R.", initials: "TR", role: "Senior RSW", shift: "07:00 – 15:00", status: "on_break" },
+    { id: "tm-7", name: "Hiroki T.", initials: "HT", role: "RSW", shift: "14:00 – 22:00", status: "arriving" },
+    { id: "tm-8", name: "Beatrice M.", initials: "BM", role: "RSW", shift: "14:00 – 22:00", status: "arriving" },
+    { id: "tm-6", name: "Finn O.", initials: "FO", role: "RSW", shift: "—", status: "on_leave" },
   ],
   "home-oakmoor": [
-    { id: "tm-3", name: "Clara F.", initials: "CF", role: "RCW", shift: "07:00 – 15:00", status: "on_shift" },
-    { id: "tm-9", name: "Nadia K.", initials: "NK", role: "RCW", shift: "07:00 – 15:00", status: "on_shift" },
-    { id: "tm-10", name: "Liam W.", initials: "LW", role: "Senior RCW", shift: "14:00 – 22:00", status: "arriving" },
+    { id: "tm-3", name: "Clara F.", initials: "CF", role: "RSW", shift: "07:00 – 15:00", status: "on_shift" },
+    { id: "tm-9", name: "Nadia K.", initials: "NK", role: "RSW", shift: "07:00 – 15:00", status: "on_shift" },
+    { id: "tm-10", name: "Liam W.", initials: "LW", role: "Senior RSW", shift: "14:00 – 22:00", status: "arriving" },
   ],
   "home-rowan": [
-    { id: "tm-11", name: "Finn Wallace", initials: "FW", role: "Senior RCW", shift: "07:00 – 15:00", status: "on_shift" },
-    { id: "tm-12", name: "Suki P.", initials: "SP", role: "RCW", shift: "07:00 – 15:00", status: "on_shift" },
-    { id: "tm-13", name: "Omar J.", initials: "OJ", role: "RCW", shift: "07:00 – 19:00", status: "on_shift" },
-    { id: "tm-14", name: "Megan T.", initials: "MT", role: "RCW", shift: "14:00 – 22:00", status: "arriving" },
+    { id: "tm-11", name: "Finn Wallace", initials: "FW", role: "Senior RSW", shift: "07:00 – 15:00", status: "on_shift" },
+    { id: "tm-12", name: "Suki P.", initials: "SP", role: "RSW", shift: "07:00 – 15:00", status: "on_shift" },
+    { id: "tm-13", name: "Omar J.", initials: "OJ", role: "RSW", shift: "07:00 – 19:00", status: "on_shift" },
+    { id: "tm-14", name: "Megan T.", initials: "MT", role: "RSW", shift: "14:00 – 22:00", status: "arriving" },
   ],
 }
 

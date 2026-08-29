@@ -1,11 +1,11 @@
 /**
- * Mock meeting / calendar data for the Senior Manager's personal view.
+ * Mock meeting / calendar data for the RI's personal view.
  *
  * In production: GET /api/me/calendar?from=&to= → CalendarSvc
  *
  * Categories:
- *   homes-catchup   — monthly all-homes review with all Home Managers
- *   home-meeting     — 1:1 with a specific Home Manager (monthly)
+ *   homes-catchup   — monthly all-homes review with all Registered Managers
+ *   home-meeting     — 1:1 with a specific Registered Manager (monthly)
  *   home-visit       — scheduled walk-around / inspection at a home
  *   board            — board / governance meetings
  *   hr               — HR, recruitment, disciplinary
@@ -78,7 +78,7 @@ export const CATEGORY_META: Record<
 
 // ── This week: 9–13 Jun 2026 (Mon–Fri) ────────────────
 
-export const SM_CALENDAR_EVENTS: CalendarEvent[] = [
+export const RI_CALENDAR_EVENTS: CalendarEvent[] = [
   // Monday 9 Jun
   {
     id: "ev-1",
@@ -281,9 +281,9 @@ export const SM_CALENDAR_EVENTS: CalendarEvent[] = [
   },
 ]
 
-// ── Home Manager events (Priya — Willow House) ──────────
+// ── Registered Manager events (Priya — Willow House) ────
 
-export const HM_CALENDAR_EVENTS: CalendarEvent[] = [
+export const MANAGER_CALENDAR_EVENTS: CalendarEvent[] = [
   // Monday 9 Jun
   {
     id: "hm-1",
@@ -310,7 +310,7 @@ export const HM_CALENDAR_EVENTS: CalendarEvent[] = [
   },
   {
     id: "hm-3",
-    title: "1:1 with Senior Manager",
+    title: "1:1 with RI",
     category: "personal",
     date: "2026-06-09",
     startTime: "14:00",

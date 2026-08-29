@@ -47,9 +47,9 @@ export const acceptSwap = (id: string): Promise<SwapActivity> => {
   return mockResponse<SwapActivity>({
     id,
     requesterId: "",
-    requester: { name: "—", initials: "—", role: "—" },
+    requester: { name: "—", initials: "—", role: "—", home: "—" },
     counterpartyId: "",
-    counterparty: { name: "You", initials: "YO" },
+    counterparty: { name: "You", initials: "YO", home: "—" },
     fromStart: "",
     toStart: "",
     summary: "",
@@ -65,9 +65,9 @@ export const declineSwap = (id: string): Promise<SwapActivity> => {
   return mockResponse<SwapActivity>({
     id,
     requesterId: "",
-    requester: { name: "—", initials: "—", role: "—" },
+    requester: { name: "—", initials: "—", role: "—", home: "—" },
     counterpartyId: "",
-    counterparty: { name: "You", initials: "YO" },
+    counterparty: { name: "You", initials: "YO", home: "—" },
     fromStart: "",
     toStart: "",
     summary: "",

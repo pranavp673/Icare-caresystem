@@ -48,7 +48,7 @@ export type WorkingSnapshot = {
   leaveBalance: number // days remaining
 }
 
-// ── Shift-worker data (Care Worker, Team Lead, Deputy, Home Manager) ──
+// ── Shift-worker data (RSW, Team Leader, Deputy Manager, Registered Manager) ──
 
 export const MY_SNAPSHOT: WorkingSnapshot = {
   rangeLabel: "This week · 7 – 13 Apr",
@@ -65,7 +65,7 @@ export const MY_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-04-11",
     start: "07:00",
     end: "15:00",
-    role: "Residential Care Worker",
+    role: "RSW",
     ward: "Willow House · Maple Unit",
     status: "in_progress",
   },
@@ -74,7 +74,7 @@ export const MY_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-04-12",
     start: "07:00",
     end: "15:00",
-    role: "Residential Care Worker",
+    role: "RSW",
     ward: "Willow House · Maple Unit",
     status: "planned",
   },
@@ -83,7 +83,7 @@ export const MY_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-04-13",
     start: "14:00",
     end: "22:00",
-    role: "Residential Care Worker",
+    role: "RSW",
     ward: "Willow House · Oak Unit",
     status: "planned",
   },
@@ -92,7 +92,7 @@ export const MY_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-04-15",
     start: "07:00",
     end: "15:00",
-    role: "Residential Care Worker",
+    role: "RSW",
     ward: "Oakmoor House · Birch Unit",
     status: "planned",
   },
@@ -123,7 +123,7 @@ export const MY_REQUESTS: MyRequest[] = [
   },
 ]
 
-// ── Senior Manager data (Mon–Fri 9–5, no shifts/swaps) ──────────────
+// ── RI/System Admin data (Mon–Fri 9–5, no shifts/swaps) ──────────────
 
 export const SM_SNAPSHOT: WorkingSnapshot = {
   rangeLabel: "This week · 9 – 13 Jun",
@@ -140,7 +140,7 @@ export const SM_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-06-12",
     start: "09:00",
     end: "17:00",
-    role: "Senior Manager",
+    role: "RI",
     ward: "Head Office",
     status: "in_progress",
   },
@@ -149,7 +149,7 @@ export const SM_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-06-13",
     start: "09:00",
     end: "17:00",
-    role: "Senior Manager",
+    role: "RI",
     ward: "Head Office",
     status: "planned",
   },
@@ -158,7 +158,7 @@ export const SM_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-06-16",
     start: "09:00",
     end: "17:00",
-    role: "Senior Manager",
+    role: "RI",
     ward: "Head Office",
     status: "planned",
   },
@@ -167,7 +167,7 @@ export const SM_UPCOMING_SHIFTS: MyShift[] = [
     date: "2026-06-17",
     start: "09:00",
     end: "17:00",
-    role: "Senior Manager",
+    role: "RI",
     ward: "Head Office",
     status: "planned",
   },

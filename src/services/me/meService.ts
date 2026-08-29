@@ -35,10 +35,10 @@ const currentMockUser = () => {
 }
 
 /**
- * Check if the current user is manager-level (Mon–Fri 9–5, no rota).
- * Deputy Manager, Home Manager, and Senior Manager all have `home.view`.
- * They share the same personal schedule shape — the dashboard scope
- * differs but is handled in the component via `user.homes`.
+ * Check if the current user is manager-tier (Mon–Fri 9–5, no rota).
+ * Deputy Manager, Registered Manager, RI, and System Admin all have
+ * `home.view`. They share the same personal schedule shape — the
+ * dashboard scope differs but is handled in the component via `user.homes`.
  */
 const isManagerLevel = (): boolean => {
   const u = currentMockUser()
@@ -61,9 +61,9 @@ export const getUpcomingShifts = (limit = 4): Promise<MyShift[]> => {
   // Manager-level: derive Mon–Fri 9–5 schedule with the user's role & home
   const u = currentMockUser()!
   const roleLabel = u.roleLabel.split("·")[0].trim()
-  const ward = u.permissions.includes("system.company.edit")
-    ? "Head Office"
-    : u.primaryHome.name
+  // RI/System Admin aren't tied to one home (see auth/user.ts) — show
+  // Head Office rather than an arbitrary primaryHome.
+  const ward = u.homes.length > 1 ? "Head Office" : u.primaryHome.name
   const shifts = SM_UPCOMING_SHIFTS.map((s) => ({
     ...s,
     role: roleLabel,

@@ -51,18 +51,6 @@ import type {
  *                         the Approve/Decline buttons in the activity feed
  */
 
-const STATUS_LABEL: Record<TeamMember["status"], string> = {
-  on_shift: "On shift",
-  off: "Off duty",
-  on_leave: "On leave",
-}
-
-const STATUS_TONE: Record<TeamMember["status"], "success" | "neutral" | "info"> = {
-  on_shift: "success",
-  off: "neutral",
-  on_leave: "info",
-}
-
 type HomeFilter = "all" | string
 type TypeFilter = "all" | "leave" | "swap"
 type ApprovalStatusFilter = "pending" | "approved" | "all"
@@ -529,7 +517,7 @@ const TeamOverview: React.FC = () => {
         )}
       </section></FadeIn>
 
-      {/* ── Team activity (hidden for Senior Managers — they use the table above) ── */}
+      {/* ── Team activity (hidden for RI/System Admin — they use the table above) ── */}
       {!can("system.company.edit") && (
       <FadeIn delay={0.12}><section
         className="team__activity card"

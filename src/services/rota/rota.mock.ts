@@ -8,12 +8,12 @@ const TEAMS = [
 ]
 
 const STAFF = [
-  { id: "s-amira", name: "Amira O.", role: "RCW", teamIdx: 0 },
-  { id: "s-daniel", name: "Daniel T.", role: "Team Lead", teamIdx: 0 },
-  { id: "s-hiroki", name: "Hiroki Y.", role: "RCW", teamIdx: 0 },
-  { id: "s-beatrice", name: "Beatrice L.", role: "Senior RCW", teamIdx: 0 },
-  { id: "s-tomas", name: "Tomás R.", role: "RCW", teamIdx: 1 },
-  { id: "s-clara", name: "Clara M.", role: "Senior RCW", teamIdx: 1 },
+  { id: "s-amira", name: "Amira O.", role: "RSW", teamIdx: 0 },
+  { id: "s-daniel", name: "Daniel T.", role: "Team Leader", teamIdx: 0 },
+  { id: "s-hiroki", name: "Hiroki Y.", role: "RSW", teamIdx: 0 },
+  { id: "s-beatrice", name: "Beatrice L.", role: "Senior RSW", teamIdx: 0 },
+  { id: "s-tomas", name: "Tomás R.", role: "RSW", teamIdx: 1 },
+  { id: "s-clara", name: "Clara M.", role: "Senior RSW", teamIdx: 1 },
 ]
 
 /* ─── Per-staff weekly patterns ─────────────────────── */

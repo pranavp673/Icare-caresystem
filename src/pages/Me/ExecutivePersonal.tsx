@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import "./SeniorPersonal.scss"
+import "./ExecutivePersonal.scss"
 import PageHeader from "../../components/PageHeader/PageHeader"
 import Modal from "../../components/Modal/Modal"
 import LeaveCalendar from "../../components/LeaveCalendar/LeaveCalendar"
@@ -10,25 +10,23 @@ import "../../components/DateTimeField/WheelTimePicker.scss"
 import {
   PageTransition,
   FadeIn,
-  StaggerList,
-  StaggerItem,
 } from "../../components/Motion"
 import { useAuth } from "../../auth/AuthContext"
 import { useToast } from "../../components/Toast/ToastProvider"
 import { meService } from "../../services"
 import {
-  SM_CALENDAR_EVENTS,
-  HM_CALENDAR_EVENTS,
+  RI_CALENDAR_EVENTS,
+  MANAGER_CALENDAR_EVENTS,
   CATEGORY_META,
-} from "./seniorCalendar.mock"
-import type { CalendarEvent, MeetingCategory } from "./seniorCalendar.mock"
+} from "./executiveCalendar.mock"
+import type { CalendarEvent, MeetingCategory } from "./executiveCalendar.mock"
 
 /**
- * Manager-level personal view — calendar-centric.
+ * Manager-tier personal view — calendar-centric.
  *
- * Replaces the shift-worker MyDashboard for manager-level users
- * (Deputy Manager, Home Manager, Senior Manager). Shows a week view
- * of meetings, home visits, catchups, and leave.
+ * Replaces the shift-worker MyDashboard for manager-tier users
+ * (Deputy Manager, Registered Manager, RI, System Admin). Shows a week
+ * view of meetings, home visits, catchups, and leave.
  * No working-hours ring, no shifts, no swaps.
  */
 
@@ -85,14 +83,16 @@ const leaveKindFromLabel = (label: string): "annual" | "sick" | "unpaid" | "comp
 
 // ── Component ──────────────────────────────────────────
 
-const SeniorPersonal: React.FC = () => {
-  const { user, can } = useAuth()
+const ExecutivePersonal: React.FC = () => {
+  const { user } = useAuth()
   const toast = useToast()
   const today = useMemo(todayIso, [])
 
-  // Senior Manager sees cross-home events; Home Manager / Deputy see home-specific
-  const isSenior = can("system.company.edit")
-  const calendarEvents = isSenior ? SM_CALENDAR_EVENTS : HM_CALENDAR_EVENTS
+  // RI/System Admin (multi-home) see cross-home events; Registered
+  // Manager/Deputy Manager (always single-home, see auth/user.ts) see
+  // home-specific events.
+  const isMultiHome = user.homes.length > 1
+  const calendarEvents = isMultiHome ? RI_CALENDAR_EVENTS : MANAGER_CALENDAR_EVENTS
 
   // Week navigation
   const [weekStart, setWeekStart] = useState(() => getMonday(new Date()))
@@ -448,4 +448,4 @@ const EventCard: React.FC<{ event: CalendarEvent }> = ({ event }) => {
   )
 }
 
-export default SeniorPersonal
+export default ExecutivePersonal

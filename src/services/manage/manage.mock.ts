@@ -42,7 +42,7 @@ export const MANAGE_OVERRIDES: OverrideDraft[] = [
     start: "2026-04-11T14:00",
     end: "2026-04-11T22:00",
     home: "Willow House",
-    slot: "Oak Unit · Senior RCW",
+    slot: "Oak Unit · Senior RSW",
     original: "Hiroki T.",
     replacement: "Daniel T.",
     reason: "sickness",
@@ -53,7 +53,7 @@ export const MANAGE_OVERRIDES: OverrideDraft[] = [
     start: "2026-04-12T07:00",
     end: "2026-04-12T15:00",
     home: "Oakmoor House",
-    slot: "Night cover · RCW",
+    slot: "Night cover · RSW",
     original: "—",
     replacement: "Clara F. (offered)",
     reason: "no_show",
@@ -64,7 +64,7 @@ export const MANAGE_OVERRIDES: OverrideDraft[] = [
     start: "2026-04-17T15:00",
     end: "2026-04-17T23:00",
     home: "Rowan Lodge",
-    slot: "Senior RCW cover",
+    slot: "Senior RSW cover",
     original: "Tomás R.",
     replacement: "Agency cover",
     reason: "training",
@@ -93,7 +93,7 @@ export const MANAGE_APPROVALS: ApprovalItem[] = [
     id: "ap-2",
     kind: "leave",
     requesterId: "tm-4",
-    requester: { name: "Tomás R.", initials: "TR", role: "Senior RCW", home: "Willow House" },
+    requester: { name: "Tomás R.", initials: "TR", role: "Senior RSW", home: "Willow House" },
     summary: "Annual leave · 2–4 May (3 days)",
     when: "Submitted yesterday",
     priority: "normal",
@@ -103,7 +103,7 @@ export const MANAGE_APPROVALS: ApprovalItem[] = [
     id: "ap-3",
     kind: "overtime",
     requesterId: "tm-3",
-    requester: { name: "Clara F.", initials: "CF", role: "RCW", home: "Oakmoor House" },
+    requester: { name: "Clara F.", initials: "CF", role: "RSW", home: "Oakmoor House" },
     summary: "+4h cover · Wed 16 Apr",
     when: "Submitted this morning",
     priority: "high",
@@ -113,7 +113,7 @@ export const MANAGE_APPROVALS: ApprovalItem[] = [
     id: "ap-5",
     kind: "leave",
     requesterId: "tm-8",
-    requester: { name: "Beatrice M.", initials: "BM", role: "RCW", home: "Rowan Lodge" },
+    requester: { name: "Beatrice M.", initials: "BM", role: "RSW", home: "Rowan Lodge" },
     summary: "Sick leave · Mon 13 Apr",
     when: "Submitted 1h ago",
     priority: "high",
@@ -123,7 +123,7 @@ export const MANAGE_APPROVALS: ApprovalItem[] = [
     id: "ap-6",
     kind: "leave",
     requesterId: "tm-2",
-    requester: { name: "Daniel T.", initials: "DT", role: "RCW", home: "Willow House" },
+    requester: { name: "Daniel T.", initials: "DT", role: "RSW", home: "Willow House" },
     summary: "Annual leave · 19–20 Jun (2 days)",
     when: "Submitted 3d ago",
     priority: "normal",
@@ -133,7 +133,7 @@ export const MANAGE_APPROVALS: ApprovalItem[] = [
     id: "ap-7",
     kind: "leave",
     requesterId: "tm-6",
-    requester: { name: "Finn O.", initials: "FO", role: "RCW", home: "Oakmoor House" },
+    requester: { name: "Finn O.", initials: "FO", role: "RSW", home: "Oakmoor House" },
     summary: "Sick leave · 12–16 Jun (5 days)",
     when: "Submitted 1d ago",
     priority: "high",
@@ -171,7 +171,7 @@ export const MANAGE_SWAPS: SwapActivity[] = [
   {
     id: "sw-1",
     requesterId: "tm-1",
-    requester: { name: "Amira O.", initials: "AO", role: "RCW", home: "Willow House" },
+    requester: { name: "Amira O.", initials: "AO", role: "RSW", home: "Willow House" },
     counterpartyId: "tm-2",
     counterparty: { name: "Daniel T.", initials: "DT", home: "Willow House" },
     fromStart: "2026-04-14T07:00",
@@ -183,7 +183,7 @@ export const MANAGE_SWAPS: SwapActivity[] = [
   {
     id: "sw-2",
     requesterId: "tm-7",
-    requester: { name: "Hiroki T.", initials: "HT", role: "RCW", home: "Willow House" },
+    requester: { name: "Hiroki T.", initials: "HT", role: "RSW", home: "Willow House" },
     counterpartyId: "tm-8",
     counterparty: { name: "Beatrice M.", initials: "BM", home: "Willow House" },
     fromStart: "2026-04-17T14:00",
@@ -195,7 +195,7 @@ export const MANAGE_SWAPS: SwapActivity[] = [
   {
     id: "sw-3",
     requesterId: "tm-3",
-    requester: { name: "Clara F.", initials: "CF", role: "RCW", home: "Oakmoor House" },
+    requester: { name: "Clara F.", initials: "CF", role: "RSW", home: "Oakmoor House" },
     counterpartyId: "tm-6",
     counterparty: { name: "Finn O.", initials: "FO", home: "Oakmoor House" },
     fromStart: "2026-04-09T07:00",
@@ -207,7 +207,7 @@ export const MANAGE_SWAPS: SwapActivity[] = [
   {
     id: "sw-4",
     requesterId: "tm-1",
-    requester: { name: "Amira O.", initials: "AO", role: "RCW", home: "Willow House" },
+    requester: { name: "Amira O.", initials: "AO", role: "RSW", home: "Willow House" },
     counterpartyId: "tm-3",
     counterparty: { name: "Clara F.", initials: "CF", home: "Oakmoor House" },
     fromStart: "2026-06-18T07:00",
@@ -222,8 +222,13 @@ export type PermissionRow = {
   id: string
   name: string
   initials: string
-  /** Access-level label managed by AcsSvc — display-only on the UI. */
-  accessLevel: "professional" | "team_lead" | "home_manager" | "admin"
+  /**
+   * Access-level label managed by AcsSvc — display-only on the UI. These
+   * are the tiers a Registered Manager+ can grant to their own staff via
+   * the Permissions panel (FR-MGR-05) — RI and System Admin are not
+   * granted this way, so they're not options here.
+   */
+  accessLevel: "rsw" | "team_lead" | "deputy_manager" | "registered_manager"
   scope: string
   lastChanged: string
 }
@@ -249,7 +254,7 @@ export const MANAGE_PERMISSIONS: PermissionRow[] = [
     id: "pm-3",
     name: "Priya A.",
     initials: "PA",
-    accessLevel: "home_manager",
+    accessLevel: "registered_manager",
     scope: "Willow · All units",
     lastChanged: "04 Jan 2026 by Sam O.",
   },
@@ -257,7 +262,7 @@ export const MANAGE_PERMISSIONS: PermissionRow[] = [
     id: "pm-4",
     name: "Clara F.",
     initials: "CF",
-    accessLevel: "professional",
+    accessLevel: "rsw",
     scope: "Oakmoor",
     lastChanged: "15 Feb 2026 by Sam O.",
   },

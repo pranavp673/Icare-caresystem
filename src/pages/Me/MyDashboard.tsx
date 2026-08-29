@@ -101,9 +101,10 @@ const MyDashboard: React.FC = () => {
   const { user, can } = useAuth()
   const toast = useToast()
 
-  // Manager-level users (Deputy, Home Manager, Senior) work Mon–Fri 9–5
-  // — no shifts, swaps, or rota. In practice DashboardRouter sends them
-  // to the executive dashboard, but this flag survives as belt-and-suspenders.
+  // Manager-tier users (Deputy Manager, Registered Manager, RI, System
+  // Admin) work Mon–Fri 9–5 — no shifts, swaps, or rota. In practice
+  // DashboardRouter sends them to the executive dashboard, but this flag
+  // survives as belt-and-suspenders.
   const isSenior = can("home.view")
   const [range, setRange] = useState<"week" | "month">("week")
 
@@ -537,7 +538,7 @@ const MyDashboard: React.FC = () => {
         </section>
       </div></FadeIn>
 
-      {/* ── Swap modal (not for Senior Manager) ─────────── */}
+      {/* ── Swap modal (not for manager-tier users) ─────── */}
       {!isSenior && <Modal
         open={swapOpen}
         onClose={() => {

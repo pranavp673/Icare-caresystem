@@ -204,7 +204,7 @@ const ManageHub: React.FC = () => {
     e.preventDefault()
     const form = new FormData(e.currentTarget)
     const email = String(form.get("email") || "")
-    const accessLevel = String(form.get("accessLevel") || "professional") as PermissionRow["accessLevel"]
+    const accessLevel = String(form.get("accessLevel") || "rsw") as PermissionRow["accessLevel"]
     void manageService.inviteTeammate({ email, accessLevel }).then(() => {
       setInviteOpen(false)
       toast.success("Invitation sent", {
@@ -630,8 +630,8 @@ const ManageHub: React.FC = () => {
             <input
               name="slot"
               className="form-field__control"
-              placeholder="Oak Unit · Senior RCW"
-              defaultValue="Oak Unit · Senior RCW"
+              placeholder="Oak Unit · Senior RSW"
+              defaultValue="Oak Unit · Senior RSW"
             />
           </label>
           <div className="form-row">
@@ -735,11 +735,12 @@ const ManageHub: React.FC = () => {
             <select
               name="accessLevel"
               className="form-field__control"
-              defaultValue="professional"
+              defaultValue="rsw"
             >
-              <option value="professional">Professional</option>
-              <option value="team_lead">Team Lead</option>
-              <option value="home_manager">Home Manager</option>
+              <option value="rsw">RSW</option>
+              <option value="team_lead">Team Leader</option>
+              <option value="deputy_manager">Deputy Manager</option>
+              <option value="registered_manager">Registered Manager</option>
             </select>
           </label>
           <div className="modal__form-actions">
