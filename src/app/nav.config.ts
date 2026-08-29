@@ -14,8 +14,8 @@
  *   RI                  → everything except Admin group, view-only (no approve/edit actions)
  *   Registered Manager  → everything except Admin group
  *   Deputy Manager       → same as Registered Manager
- *   Team Leader          → Dashboard, Team, Calendar, Rota, Residents (read), Manage, Common Files
- *   RSW                  → Dashboard, Team (own), Calendar, Residents (read), Common Files
+ *   Team Leader          → Dashboard, Team, Calendar, Rota, Residents (read), Manage, Common Files, Time Sheet
+ *   RSW                  → Dashboard, Team (own), Calendar, Residents (read), Common Files, Time Sheet
  */
 
 import type { LucideIcon } from "lucide-react"
@@ -32,6 +32,7 @@ import {
   Settings2,
   UserCog,
   FileText,
+  Clock,
 } from "lucide-react"
 import type { Permission } from "../auth/roles"
 
@@ -117,6 +118,16 @@ export const NAV_GROUPS: NavGroup[] = [
         matchPrefix: "/common-files",
         hint: "Statement of Purpose, checks, meetings, and handovers",
         requiredPerms: ["commonFiles.view"],
+      },
+      {
+        id: "timesheet",
+        to: "/timesheet",
+        label: "Time Sheet",
+        icon: Clock,
+        matchPrefix: "/timesheet",
+        hint: "Rota, leave, overtime, swaps, on-call, and supervision",
+        // No gating permission — visible to everyone, same as Team/Calendar.
+        // Scope is resolved per-viewer by staffScope.ts, not by nav gating.
       },
     ],
   },

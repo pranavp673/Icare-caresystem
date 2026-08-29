@@ -42,6 +42,13 @@ export type CurrentUser = {
   homes: HomeRef[]
   /** Working-team identifier (see TeamMember.teamId in team.mock). */
   teamId: string
+  /**
+   * Links this user to their `TeamMember` row (team.mock.ts), when they
+   * have one — Amira/Daniel/Priya are shift-roster members; Sam/Raj/Alex
+   * are not (same set that has `teamId: ""`). Used by the Time
+   * Sheet/Supervision staff-scope cascade (services/team/staffScope.ts).
+   */
+  teamMemberId?: string
 }
 
 /**
@@ -92,6 +99,7 @@ export const MOCK_USERS: MockUser[] = [
     primaryHome: HOME_WILLOW,
     homes: [HOME_WILLOW],
     teamId: "team-willow-day",
+    teamMemberId: "tm-1",
     permissions: [
       "me.view",
       "leave.request",
@@ -120,6 +128,7 @@ export const MOCK_USERS: MockUser[] = [
     primaryHome: HOME_WILLOW,
     homes: [HOME_WILLOW],
     teamId: "team-willow-day",
+    teamMemberId: "tm-2",
     permissions: [
       "me.view",
       "leave.request",
@@ -133,6 +142,8 @@ export const MOCK_USERS: MockUser[] = [
       "residents.comments.write",
       "commonFiles.view",
       "commonFiles.log",
+      "timesheets.view.all",
+      "supervision.log",
     ],
   },
 
@@ -178,6 +189,7 @@ export const MOCK_USERS: MockUser[] = [
       "audit.view.all",
       "commonFiles.view",
       "commonFiles.log",
+      "supervision.log",
     ],
   },
 
@@ -199,6 +211,7 @@ export const MOCK_USERS: MockUser[] = [
     primaryHome: HOME_WILLOW,
     homes: [HOME_WILLOW],
     teamId: "team-willow-day",
+    teamMemberId: "tm-5",
     permissions: [
       "me.view",
       "leave.request",
@@ -229,6 +242,9 @@ export const MOCK_USERS: MockUser[] = [
       "commonFiles.view",
       "commonFiles.log",
       "commonFiles.edit",
+      "supervision.log",
+      "onCall.edit",
+      "payroll.view",
     ],
   },
 
@@ -276,6 +292,10 @@ export const MOCK_USERS: MockUser[] = [
       "audit.export",
       // Common Files — view only, cannot log entries (outside the operational chain)
       "commonFiles.view",
+      // RI is the one write exception: RI supervises Registered Manager
+      // per the supervision chain (§3.6.1), so RI needs to log that
+      // supervision even though everything else here is view-only.
+      "supervision.log",
       // No system.* — that's System Admin's domain now
     ],
   },
@@ -329,6 +349,9 @@ export const MOCK_USERS: MockUser[] = [
       "commonFiles.view",
       "commonFiles.log",
       "commonFiles.edit",
+      "supervision.log",
+      "onCall.edit",
+      "payroll.view",
       "system.company.edit",
       "system.home.edit",
       "system.workpatterns.edit",

@@ -19,6 +19,8 @@
  * A third team can be added for Rowan Lodge when the mock grows, but
  * the same fields cover every scope decision today.
  */
+export type StaffTier = "rsw" | "team_lead" | "deputy_manager" | "registered_manager"
+
 export type TeamMember = {
   id: string
   name: string
@@ -27,6 +29,15 @@ export type TeamMember = {
   home: string
   /** Working team — used by same-team scope filters. */
   teamId: string
+  /**
+   * Filterable role tier — added for the Time Sheet/Supervision staff-scope
+   * cascade (see services/team/staffScope.ts). Distinct from `role`, which
+   * is a free-text display string (e.g. "Senior RSW · 6y") that can't be
+   * reliably filtered on.
+   */
+  tier: StaffTier
+  /** Who conducts this person's supervision (their direct manager's TeamMember id, if modeled). */
+  supervisorId?: string
   hoursThisWeek: number
   hoursRequired: number
   leavesPending: number
@@ -42,6 +53,8 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: "RSW · 3y",
     home: "Willow House",
     teamId: "team-willow-day",
+    tier: "rsw",
+    supervisorId: "tm-2",
     hoursThisWeek: 24,
     hoursRequired: 40,
     leavesPending: 0,
@@ -52,9 +65,14 @@ export const TEAM_MEMBERS: TeamMember[] = [
     id: "tm-2",
     name: "Daniel T.",
     initials: "DT",
-    role: "RSW · 4y",
+    // Was mistagged "RSW · 4y" — Daniel is the Team Leader persona (u-tl)
+    // everywhere else in the app. Fixed here since the staff-scope cascade
+    // depends on this being correct.
+    role: "Team Leader · 4y",
     home: "Willow House",
     teamId: "team-willow-day",
+    tier: "team_lead",
+    supervisorId: "tm-5",
     hoursThisWeek: 32,
     hoursRequired: 40,
     leavesPending: 1,
@@ -68,6 +86,8 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: "RSW · 1y",
     home: "Oakmoor House",
     teamId: "team-oakmoor",
+    tier: "rsw",
+    // No Team Leader modeled at Oakmoor yet — pre-existing gap, not fixed in this phase.
     hoursThisWeek: 16,
     hoursRequired: 32,
     leavesPending: 0,
@@ -81,6 +101,8 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: "Senior RSW · 6y",
     home: "Willow House",
     teamId: "team-willow-day",
+    tier: "rsw",
+    supervisorId: "tm-2",
     hoursThisWeek: 40,
     hoursRequired: 40,
     leavesPending: 1,
@@ -94,6 +116,8 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: "Registered Manager",
     home: "Willow House",
     teamId: "team-willow-day",
+    tier: "registered_manager",
+    // Supervised by RI (Raj Kapoor), who isn't a TeamMember row.
     hoursThisWeek: 36,
     hoursRequired: 40,
     leavesPending: 0,
@@ -107,6 +131,7 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: "RSW · 2y",
     home: "Oakmoor House",
     teamId: "team-oakmoor",
+    tier: "rsw",
     hoursThisWeek: 0,
     hoursRequired: 40,
     leavesPending: 0,
@@ -120,6 +145,8 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: "RSW · 5y",
     home: "Willow House",
     teamId: "team-willow-day",
+    tier: "rsw",
+    supervisorId: "tm-2",
     hoursThisWeek: 28,
     hoursRequired: 40,
     leavesPending: 0,
@@ -133,6 +160,8 @@ export const TEAM_MEMBERS: TeamMember[] = [
     role: "RSW · 2y",
     home: "Willow House",
     teamId: "team-willow-day",
+    tier: "rsw",
+    supervisorId: "tm-2",
     hoursThisWeek: 24,
     hoursRequired: 40,
     leavesPending: 0,

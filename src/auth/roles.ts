@@ -58,8 +58,17 @@ export type Permission =
   | "commonFiles.edit" // edit Statement of Purpose (Registered Manager, Admin)
 
   // ── Timesheets & variance ─────────────────────────────
-  | "timesheets.view.all" // view all timesheets across a home (Manager, Deputy)
+  | "timesheets.view.all" // scope beyond own timesheet — Team Leader (own team),
+                          //   Deputy Manager/Registered Manager (own home), RI/Admin (all homes);
+                          //   actual scope resolved by staffScope.ts, not by this flag alone
   | "variance.approve" //   approve or decline a variance request (Manager, Deputy)
+  | "onCall.edit" //        manage on-call schedule (Registered Manager, Admin — FR-TS-06)
+  | "payroll.view" //       Payroll tab — Registered Manager, Admin only (FR-TS-07)
+
+  // ── Supervision (FR-SUP) ──────────────────────────────
+  | "supervision.log" //    log a supervision record for a direct report —
+                          //   Team Leader, Deputy Manager, Registered Manager, RI (RI
+                          //   supervises Registered Manager), Admin. Not RSW.
 
   // ── Management actions ────────────────────────────────
   | "manage.view"
