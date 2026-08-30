@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { motion } from "framer-motion"
 import "./ExecutiveDashboard.scss"
 import PageHeader from "../../components/PageHeader/PageHeader"
+import Modal from "../../components/Modal/Modal"
 import {
   PageTransition,
   FadeIn,
@@ -13,6 +14,8 @@ import {
   standardTransition,
 } from "../../components/Motion"
 import { useAuth } from "../../auth/AuthContext"
+import { useToast } from "../../components/Toast/ToastProvider"
+import { accessService } from "../../services"
 import {
   MOCK_HOME_HEALTH,
   MOCK_ESCALATIONS,
@@ -21,6 +24,7 @@ import {
   MOCK_TODAY_EVENTS,
 } from "./executive.mock"
 import type { HomeHealth, Escalation, IncidentSeverity, StaffOnDuty, TodayEvent } from "./executive.mock"
+import type { HomeAccessGrant } from "../../services/access/access.types"
 
 /**
  * Executive dashboard for manager-tier users (Deputy Manager, Registered
@@ -248,6 +252,7 @@ const ExecutiveDashboard: React.FC = () => {
                 <div className="sr-dash__side-panels">
                   <StaffOnDutyPanel homeId={homes[0].id} />
                   <TodaySchedulePanel homeId={homes[0].id} />
+                  <CrossHomeCoverPanel homeId={homes[0].id} />
                 </div>
               )}
             </motion.div>
@@ -560,6 +565,96 @@ const TodaySchedulePanel: React.FC<{ homeId: string }> = ({ homeId }) => {
           ))}
         </ul>
       )}
+    </div>
+  )
+}
+
+// ── Cross-home cover panel (§2.1.1) ──────────────────
+//
+// Situational awareness, not an access gate — Common Files and resident
+// data are already universally visible regardless of home (Phases 2/4),
+// so there's nothing left for this to unlock. What it does do: tell a
+// Registered Manager who's rostered to cover their home from elsewhere
+// this week, with a safeguarding revoke.
+
+const CrossHomeCoverPanel: React.FC<{ homeId: string }> = ({ homeId }) => {
+  const { user, can } = useAuth()
+  const toast = useToast()
+  const canRevoke = can("access.revoke")
+  const [grants, setGrants] = useState<HomeAccessGrant[]>([])
+  const [revokeTarget, setRevokeTarget] = useState<HomeAccessGrant | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    void accessService.listGrantsForHome(homeId).then((rows) => {
+      if (!cancelled) setGrants(rows)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [homeId])
+
+  const active = grants.filter((g) => g.status === "active")
+
+  const handleRevoke = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!revokeTarget) return
+    const form = new FormData(e.currentTarget)
+    const reason = String(form.get("reason") || "")
+    if (!reason.trim()) return
+    void accessService
+      .revokeGrant(revokeTarget.id, { revokedBy: user.name, revokedReason: reason })
+      .then((updated) => {
+        setGrants((list) => list.map((g) => (g.id === updated.id ? updated : g)))
+        setRevokeTarget(null)
+        toast.info("Cross-home access revoked", {
+          description: `${updated.staffName} · ${updated.homeName}`,
+        })
+      })
+  }
+
+  if (active.length === 0) return null
+
+  return (
+    <div className="card card--padded sr-cover-panel">
+      <header className="section-head">
+        <h3 className="section-title">Cross-home cover this week</h3>
+        <span className="badge">{active.length}</span>
+      </header>
+      <ul className="sr-cover__list">
+        {active.map((g) => (
+          <li key={g.id} className="sr-cover__row">
+            <div className="sr-cover__info">
+              <span className="sr-cover__name">{g.staffName}</span>
+              <span className="sr-cover__note">{g.shiftNote ?? `Covering ${g.shiftDate}`}</span>
+            </div>
+            {canRevoke && (
+              <button type="button" className="btn btn--ghost btn--sm" onClick={() => setRevokeTarget(g)}>
+                Revoke
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <Modal
+        open={!!revokeTarget}
+        onClose={() => setRevokeTarget(null)}
+        eyebrow="CROSS-HOME COVER"
+        title={`Revoke cover — ${revokeTarget?.staffName ?? ""}`}
+        size="sm"
+      >
+        <form onSubmit={handleRevoke}>
+          <label className="form-field">
+            <span className="form-field__label">Reason</span>
+            <textarea name="reason" className="form-field__control" rows={3} required />
+          </label>
+          <div className="modal__form-actions">
+            <button type="button" className="btn btn--ghost" onClick={() => setRevokeTarget(null)}>Cancel</button>
+            <button type="submit" className="btn btn--primary">Revoke</button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }

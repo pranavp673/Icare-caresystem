@@ -619,6 +619,54 @@
   text-overflow: ellipsis;
 }
 
+/* ── Cross-home cover panel ────────────────────────── */
+
+.sr-cover-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sr-cover__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.sr-cover__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-1);
+  border-radius: var(--radius-md);
+  transition: background var(--motion-fast) var(--ease-standard);
+}
+.sr-cover__row:hover {
+  background: var(--color-surface-muted);
+}
+
+.sr-cover__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sr-cover__name {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--color-fg);
+}
+
+.sr-cover__note {
+  font-size: var(--text-xs);
+  color: var(--color-fg-subtle);
+}
+
 /* ── Responsive ────────────────────────────────────── */
 
 @media (max-width: 960px) {

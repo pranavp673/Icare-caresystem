@@ -70,6 +70,10 @@ export type Permission =
                           //   Team Leader, Deputy Manager, Registered Manager, RI (RI
                           //   supervises Registered Manager), Admin. Not RSW.
 
+  // ── Cross-home access delegation (§2.1.1) ─────────────
+  | "access.revoke" //      revoke a rota-driven cross-home access grant —
+                          //   Registered Manager, Admin only
+
   // ── Management actions ────────────────────────────────
   | "manage.view"
   | "approvals.review"

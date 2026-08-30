@@ -14,13 +14,14 @@ import "../../components/DateTimeField/WheelTimePicker.scss"
 import { useAuth } from "../../auth/AuthContext"
 import { useToast } from "../../components/Toast/ToastProvider"
 import { formatLocalDateTime } from "../../lib/format"
-import { meService, swapService } from "../../services"
+import { meService, swapService, accessService } from "../../services"
 import type {
   MyRequest,
   MyShift,
   WorkingSnapshot,
   LeaveKind,
 } from "../../services/me/me.types"
+import type { HomeAccessGrant } from "../../services/access/access.types"
 
 /**
  * ME-001 — My Dashboard.
@@ -111,6 +112,7 @@ const MyDashboard: React.FC = () => {
   const [snap, setSnap] = useState<WorkingSnapshot | null>(null)
   const [shifts, setShifts] = useState<MyShift[]>([])
   const [requests, setRequests] = useState<MyRequest[]>([])
+  const [coverGrants, setCoverGrants] = useState<HomeAccessGrant[]>([])
   const [swapOpen, setSwapOpen] = useState(false)
   const [leaveOpen, setLeaveOpen] = useState(false)
   const [prefillShiftId, setPrefillShiftId] = useState<string | null>(null)
@@ -178,6 +180,18 @@ const MyDashboard: React.FC = () => {
       cancelled = true
     }
   }, [range])
+
+  // Cross-home cover (§2.1.1) — situational awareness only, not an
+  // access gate (Common Files/resident data are already universal).
+  useEffect(() => {
+    let cancelled = false
+    void accessService.listMyGrants(user.id).then((rows) => {
+      if (!cancelled) setCoverGrants(rows)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [user.id])
 
   const pct = useMemo(() => (snap ? progress(snap) : 0), [snap])
   const remaining = snap ? Math.max(snap.required - snap.worked, 0) : 0
@@ -363,6 +377,16 @@ const MyDashboard: React.FC = () => {
           </>
         }
       />
+
+      {/* ── Cross-home cover banner (§2.1.1) ──────────── */}
+      {coverGrants.map((g) => (
+        <FadeIn key={g.id}>
+          <div className="my-dash__cover-banner">
+            You have delegated access to cover at <strong>{g.homeName}</strong> on {g.shiftDate}
+            {g.shiftNote ? ` — ${g.shiftNote}` : ""}.
+          </div>
+        </FadeIn>
+      ))}
 
       {/* ── Working snapshot ──────────────────────────── */}
       <FadeIn delay={0.05}><section className="my-dash__snapshot card card--padded">

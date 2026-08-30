@@ -20,6 +20,14 @@ export type RotaEntry = {
   teamId: string
   teamName: string
   note?: string         // e.g. "Covering for Daniel T."
+  /**
+   * Set only when this shift covers a home other than the week's home
+   * (`RotaWeek.homeId`) — the staff member is rostered elsewhere for the
+   * day. Drives `services/access`'s auto-generated `HomeAccessGrant`
+   * records (§2.1.1). Absent on every normal (same-home) entry.
+   */
+  coveringHomeId?: string
+  coveringHomeName?: string
 }
 
 export type RotaDay = {

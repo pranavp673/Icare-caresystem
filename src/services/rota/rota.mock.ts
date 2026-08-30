@@ -18,7 +18,14 @@ const STAFF = [
 
 /* ─── Per-staff weekly patterns ─────────────────────── */
 
-type DayPattern = { start: string; end: string; type: "shift" | "overtime" | "leave" | "swap"; note?: string } | null
+type DayPattern = {
+  start: string
+  end: string
+  type: "shift" | "overtime" | "leave" | "swap"
+  note?: string
+  coveringHomeId?: string
+  coveringHomeName?: string
+} | null
 
 // Each array is Mon–Sun. null = day off.
 const PATTERNS: Record<string, DayPattern[]> = {
@@ -29,7 +36,14 @@ const PATTERNS: Record<string, DayPattern[]> = {
     { start: "06:30", end: "14:30", type: "shift" },
     { start: "07:00", end: "15:00", type: "shift" },
     null,
-    { start: "08:00", end: "14:00", type: "swap", note: "Covering for Hiroki Y." },
+    {
+      start: "08:00",
+      end: "14:00",
+      type: "swap",
+      note: "Covering shift at Oakmoor House",
+      coveringHomeId: "home-oakmoor",
+      coveringHomeName: "Oakmoor House",
+    },
   ],
   "s-daniel": [
     { start: "07:00", end: "15:30", type: "shift" },
@@ -139,6 +153,8 @@ const generateWeek = (weekStart: string): RotaWeek => {
         teamId: team.id,
         teamName: team.name,
         note: p.note,
+        coveringHomeId: p.coveringHomeId,
+        coveringHomeName: p.coveringHomeName,
       })
     }
 

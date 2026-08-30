@@ -245,6 +245,7 @@ export const MOCK_USERS: MockUser[] = [
       "supervision.log",
       "onCall.edit",
       "payroll.view",
+      "access.revoke",
     ],
   },
 
@@ -352,6 +353,7 @@ export const MOCK_USERS: MockUser[] = [
       "supervision.log",
       "onCall.edit",
       "payroll.view",
+      "access.revoke",
       "system.company.edit",
       "system.home.edit",
       "system.workpatterns.edit",
