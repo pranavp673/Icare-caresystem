@@ -1,7 +1,10 @@
 /**
- * AuditSvc types. Read-only event stream and evidence-pack export.
- * Filters mirror the chips on the Audit page so the page-level filter
- * state can be passed straight through as a query.
+ * AuditSvc types. Mostly a read-only event stream and evidence-pack
+ * export — filters mirror the chips on the Audit page so the page-level
+ * filter state can be passed straight through as a query. `recordEvent`
+ * (see auditService.ts) is the one write path, added for Resident Detail
+ * view/change logging (§2.2) once the restricted-access gate on that
+ * page was removed in favour of universal visibility + an audit trail.
  */
 import type {
   AuditChannel,
@@ -53,6 +56,18 @@ export type ExportJob = {
   jobId: string
   status: "queued" | "running" | "ready" | "failed"
   downloadUrl?: string
+}
+
+export type RecordAuditEventRequest = {
+  actorId: string | null
+  actor: string
+  actorRole: string
+  action: string
+  target: string
+  home?: string
+  domain: AuditDomain
+  channel: AuditChannel
+  severity?: AuditSeverity
 }
 
 export type { AuditChannel, AuditDomain, AuditEvent, AuditSeverity }

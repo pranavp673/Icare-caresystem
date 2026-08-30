@@ -1,10 +1,12 @@
 /**
- * ResidentsSvc mock — per-resident profile, comments, and service history.
+ * ResidentsSvc mock — per-resident profile and comments. The 14 §3.5.1
+ * document types (plans, incident reports, health records, daily
+ * records, activity) live in the sibling `residentDocuments.mock.ts`,
+ * replacing what used to be a single flat service-history feed here.
  *
  * The base resident roster comes from `home/residents.mock.ts` (same rows
  * that back `homeService.listResidents`); this file *layers* detail on
- * top — date of birth, keyworker, admission date, comments timeline,
- * and a chronological service-history feed.
+ * top — date of birth, keyworker, admission date, comments timeline.
  *
  * On the real backend this data is the composition of two domains:
  *   * HomeSvc (who lives where, basic demographics)
@@ -45,23 +47,6 @@ export type ResidentComment = {
   body: string
   /** If set, this comment is a reply to the given parent comment. */
   parentId: string | null
-}
-
-export type ServiceEventKind =
-  | "admission"
-  | "placement_plan"
-  | "health_review"
-  | "incident"
-  | "appointment"
-  | "note"
-
-export type ServiceEvent = {
-  id: string
-  residentId: string
-  at: string
-  kind: ServiceEventKind
-  summary: string
-  by: string
 }
 
 const PROFILE_DETAIL: Record<
@@ -291,33 +276,4 @@ export const RESIDENT_COMMENTS: ResidentComment[] = [
     body: "Finn settling well — joined the group for breakfast for the first time today. Building rapport with key-worker.",
     parentId: null,
   },
-]
-
-export const RESIDENT_SERVICE_HISTORY: ServiceEvent[] = [
-  // s1 — Ashanti
-  { id: "se-1", residentId: "s1", at: "2024-09-14", kind: "admission", summary: "Placed at Willow House · Maple Unit", by: "Priya A." },
-  { id: "se-2", residentId: "s1", at: "2025-11-30", kind: "placement_plan", summary: "Placement plan review — education and behaviour goals updated", by: "Tomás R." },
-  { id: "se-3", residentId: "s1", at: "2026-04-10", kind: "note", summary: "Key-worker session completed — stable progress", by: "Amira O." },
-  // s2 — Beatrice
-  { id: "se-4", residentId: "s2", at: "2023-06-03", kind: "admission", summary: "Placed at Willow House · Oak Unit", by: "Priya A." },
-  { id: "se-5", residentId: "s2", at: "2026-03-28", kind: "health_review", summary: "Quarterly LAC health review completed", by: "Tomás R." },
-  { id: "se-6", residentId: "s2", at: "2026-04-11", kind: "note", summary: "Positive evening routine — updated behaviour plan notes", by: "Daniel T." },
-  // s3 — Chen Wei
-  { id: "se-7", residentId: "s3", at: "2025-07-12", kind: "admission", summary: "Short-term placement for family support", by: "Priya A." },
-  { id: "se-8", residentId: "s3", at: "2026-04-09", kind: "appointment", summary: "Weekly therapeutic session with CAMHS", by: "External · Therapist" },
-  // s4 — Daria
-  { id: "se-9", residentId: "s4", at: "2023-05-30", kind: "admission", summary: "Placed at Willow House", by: "Priya A." },
-  { id: "se-10", residentId: "s4", at: "2026-04-11", kind: "incident", summary: "Unsettled during waking night — anxiety about pathway plan, supported", by: "Daniel T." },
-  // s5 — Elena
-  { id: "se-11", residentId: "s5", at: "2025-01-25", kind: "admission", summary: "Placed at Oakmoor House", by: "Priya A." },
-  { id: "se-12", residentId: "s5", at: "2026-04-05", kind: "health_review", summary: "PEP review — good school progress noted", by: "Tomás R." },
-  // s6 — Finn
-  { id: "se-13", residentId: "s6", at: "2026-03-28", kind: "admission", summary: "New placement — Oakmoor House", by: "Priya A." },
-  { id: "se-14", residentId: "s6", at: "2026-04-05", kind: "placement_plan", summary: "Initial placement plan drafted with social worker", by: "Priya A." },
-  // s7 — Grace
-  { id: "se-15", residentId: "s7", at: "2025-01-19", kind: "admission", summary: "Respite placement, Willow House", by: "Priya A." },
-  { id: "se-16", residentId: "s7", at: "2026-04-07", kind: "note", summary: "Transition to full-time placement approved by placing authority", by: "Priya A." },
-  // s8 — Hiroki
-  { id: "se-17", residentId: "s8", at: "2024-12-07", kind: "admission", summary: "Placed at Willow House · Maple Unit", by: "Priya A." },
-  { id: "se-18", residentId: "s8", at: "2026-04-10", kind: "appointment", summary: "Music therapy session attended", by: "External · Therapist" },
 ]

@@ -3,27 +3,51 @@ import { Link, useParams } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import "./Residents.scss"
 import PageHeader from "../../components/PageHeader/PageHeader"
+import Modal from "../../components/Modal/Modal"
 import { useAuth } from "../../auth/AuthContext"
 import { useToast } from "../../components/Toast/ToastProvider"
 import { auditService, residentsService } from "../../services"
 import { PageTransition, FadeIn, StaggerList, StaggerItem } from "../../components/Motion"
+import {
+  PLAN_KIND_LABEL,
+  INCIDENT_KIND_LABEL,
+  HEALTH_KIND_LABEL,
+} from "../../services/residents/residentDocuments.mock"
 import type {
+  ActivityEntry,
+  DailyRecordEntry,
+  HealthRecord,
+  HealthRecordKind,
+  IncidentReport,
+  IncidentReportKind,
+  PlanDocument,
+  PlanKind,
   ResidentComment,
   ResidentProfile,
   ResidentStatus,
-  ServiceEvent,
-  ServiceEventKind,
 } from "../../services/residents/residents.types"
 import type { AuditEvent } from "../../services/audit/audit.types"
 
 /**
  * RESIDENT-002 — Resident detail.
  *
- * Four surfaces for a single resident:
- *   1. Profile        — demographics, keyworker, primary contact, summary
- *   2. Service history — chronological care events
- *   3. Audit trail    — read-only AuditSvc events referencing this resident
- *   4. Comments       — hierarchical, append-only ops notes
+ * Eight surfaces for a single resident (§3.5.1 / §11.6):
+ *   1. Profile              — demographics, keyworker, primary contact, summary
+ *   2. Daily Record          — Daily Logs + Daily Education + Reflective, combined per day
+ *   3. Plans & Assessments   — Care Plan, Behaviour Support Plan, Risk Assessment, EHCP, Family Tree
+ *   4. Incidents & Reports   — Accident/Missing Reports, Incidents
+ *   5. Health & Reviews      — Health Reports, Appointments, LAC Minutes
+ *   6. Activity
+ *   7. Audit trail           — read-only AuditSvc events referencing this resident
+ *   8. Comments              — hierarchical, append-only ops notes
+ *
+ * Resident data is universally visible (§2.2) — there is no access gate
+ * on this page. `residentsService.getResident` logs a "viewed" audit
+ * event on every fetch as the compensating control; every create action
+ * below logs its own change event too (see residentsService.ts).
+ * Creating an entry on any tab (except viewing) requires
+ * `residents.comments.write` — the existing "operational chain, not RI"
+ * permission, reused rather than adding new ones.
  */
 
 const statusLabel: Record<ResidentStatus, string> = {
@@ -39,16 +63,14 @@ const statusTone: Record<ResidentStatus, "neutral" | "success" | "warning" | "in
   transitioning: "neutral",
 }
 
-const kindLabel: Record<ServiceEventKind, string> = {
-  admission: "Admission",
-  placement_plan: "Placement plan",
-  health_review: "Health review",
-  incident: "Incident",
-  appointment: "Appointment",
-  note: "Note",
+const severityTone: Record<IncidentReport["severity"], string> = {
+  minor: "neutral",
+  moderate: "info",
+  major: "warning",
+  critical: "danger",
 }
 
-type Tab = "profile" | "history" | "audit" | "comments"
+type Tab = "profile" | "daily" | "plans" | "incidents" | "health" | "activity" | "audit" | "comments"
 
 const toEpoch = (at: string) => new Date(at.replace(" ", "T")).getTime()
 
@@ -72,14 +94,18 @@ const buildThread = (flat: ResidentComment[]) => {
 
 const ResidentDetail: React.FC = () => {
   const { id = "" } = useParams<{ id: string }>()
-  const { can, user, scope } = useAuth()
+  const { can, scope } = useAuth()
   const toast = useToast()
-  const canPeople = can("people.view")
+  const canLog = can("residents.comments.write")
 
   const [resident, setResident] = useState<ResidentProfile | null>(null)
-  const [history, setHistory] = useState<ServiceEvent[]>([])
   const [comments, setComments] = useState<ResidentComment[]>([])
   const [audit, setAudit] = useState<AuditEvent[]>([])
+  const [dailyRecords, setDailyRecords] = useState<DailyRecordEntry[]>([])
+  const [plans, setPlans] = useState<PlanDocument[]>([])
+  const [incidents, setIncidents] = useState<IncidentReport[]>([])
+  const [health, setHealth] = useState<HealthRecord[]>([])
+  const [activity, setActivity] = useState<ActivityEntry[]>([])
 
   useEffect(() => {
     if (!id) return
@@ -87,11 +113,23 @@ const ResidentDetail: React.FC = () => {
     void residentsService.getResident(id).then((c) => {
       if (!cancelled) setResident(c)
     })
-    void residentsService.listResidentHistory(id).then((rows) => {
-      if (!cancelled) setHistory(rows)
-    })
     void residentsService.listResidentComments(id).then((rows) => {
       if (!cancelled) setComments(rows)
+    })
+    void residentsService.listDailyRecords(id).then((rows) => {
+      if (!cancelled) setDailyRecords(rows)
+    })
+    void residentsService.listPlans(id).then((rows) => {
+      if (!cancelled) setPlans(rows)
+    })
+    void residentsService.listIncidentReports(id).then((rows) => {
+      if (!cancelled) setIncidents(rows)
+    })
+    void residentsService.listHealthRecords(id).then((rows) => {
+      if (!cancelled) setHealth(rows)
+    })
+    void residentsService.listActivity(id).then((rows) => {
+      if (!cancelled) setActivity(rows)
     })
     return () => {
       cancelled = true
@@ -116,14 +154,6 @@ const ResidentDetail: React.FC = () => {
     }
   }, [resident, scope.homes])
 
-  const isAssigned = resident
-    ? user.id === resident.primaryOwnerId || user.id === resident.assignedOwnerId
-    : false
-  const hasFullAccess = canPeople || isAssigned
-  // Admin holds people.view but NOT residents.comments.write — the only
-  // place Admin is explicitly blocked from writing. Gate both conditions.
-  const canComment = hasFullAccess && can("residents.comments.write")
-
   const [tab, setTab] = useState<Tab>("profile")
 
   const [draft, setDraft] = useState("")
@@ -143,21 +173,108 @@ const ResidentDetail: React.FC = () => {
     })
   }
 
-  const [accessReason, setAccessReason] = useState("")
-  const [accessSent, setAccessSent] = useState(false)
-  const submitAccessRequest = async () => {
-    if (!resident || !accessReason.trim()) return
-    await residentsService.requestResidentAccess({
-      residentId: resident.id,
-      reason: accessReason.trim(),
-    })
-    setAccessSent(true)
-    toast.success("Access requested", {
-      description: `Your request has been sent to ${resident.name}'s care team manager.`,
-    })
+  // ── New-entry modals ─────────────────────────────────
+  const [dailyOpen, setDailyOpen] = useState(false)
+  const [planOpen, setPlanOpen] = useState(false)
+  const [incidentOpen, setIncidentOpen] = useState(false)
+  const [healthOpen, setHealthOpen] = useState(false)
+  const [activityOpen, setActivityOpen] = useState(false)
+
+  const handleAddDaily = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!resident) return
+    const form = new FormData(e.currentTarget)
+    void residentsService
+      .addDailyRecord({
+        residentId: resident.id,
+        date: String(form.get("date") || ""),
+        dailyLog: String(form.get("dailyLog") || ""),
+        dailyEducation: String(form.get("dailyEducation") || ""),
+        reflective: String(form.get("reflective") || ""),
+      })
+      .then((entry) => {
+        setDailyRecords((list) => [entry, ...list])
+        setDailyOpen(false)
+        toast.success("Daily record logged")
+      })
   }
 
-  const sortedHistory = useMemo(() => history, [history])
+  const handleSavePlan = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!resident) return
+    const form = new FormData(e.currentTarget)
+    void residentsService
+      .savePlan({
+        residentId: resident.id,
+        kind: form.get("kind") as PlanKind,
+        content: String(form.get("content") || ""),
+      })
+      .then((doc) => {
+        setPlans((list) => [doc, ...list])
+        setPlanOpen(false)
+        toast.success(`${PLAN_KIND_LABEL[doc.kind]} updated`)
+      })
+  }
+
+  const handleAddIncident = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!resident) return
+    const form = new FormData(e.currentTarget)
+    void residentsService
+      .addIncidentReport({
+        residentId: resident.id,
+        kind: form.get("kind") as IncidentReportKind,
+        occurredAt: String(form.get("occurredAt") || ""),
+        description: String(form.get("description") || ""),
+        severity: form.get("severity") as IncidentReport["severity"],
+      })
+      .then((report) => {
+        setIncidents((list) => [report, ...list])
+        setIncidentOpen(false)
+        toast.success(`${INCIDENT_KIND_LABEL[report.kind]} logged`)
+      })
+  }
+
+  const handleAddHealth = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!resident) return
+    const form = new FormData(e.currentTarget)
+    const attendees = String(form.get("attendees") || "")
+      .split(",")
+      .map((a) => a.trim())
+      .filter(Boolean)
+    void residentsService
+      .addHealthRecord({
+        residentId: resident.id,
+        kind: form.get("kind") as HealthRecordKind,
+        date: String(form.get("date") || ""),
+        notes: String(form.get("notes") || ""),
+        attendees: attendees.length > 0 ? attendees : undefined,
+      })
+      .then((record) => {
+        setHealth((list) => [record, ...list])
+        setHealthOpen(false)
+        toast.success(`${HEALTH_KIND_LABEL[record.kind]} logged`)
+      })
+  }
+
+  const handleAddActivity = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!resident) return
+    const form = new FormData(e.currentTarget)
+    void residentsService
+      .addActivity({
+        residentId: resident.id,
+        date: String(form.get("date") || ""),
+        description: String(form.get("description") || ""),
+      })
+      .then((entry) => {
+        setActivity((list) => [entry, ...list])
+        setActivityOpen(false)
+        toast.success("Activity logged")
+      })
+  }
+
   const { roots, childMap } = useMemo(() => buildThread(comments), [comments])
 
   const replyTarget = replyTo
@@ -180,81 +297,9 @@ const ResidentDetail: React.FC = () => {
     )
   }
 
-  if (!hasFullAccess) {
-    return (
-      <div className="residents residents--detail">
-        <PageHeader
-          eyebrow="RESIDENT"
-          title={resident.name}
-          subtitle={`${resident.code} · ${resident.home} · Room ${resident.roomNumber}`}
-          actions={
-            <Link to="/residents" className="btn btn--ghost">
-              &larr; All residents
-            </Link>
-          }
-        />
-
-        <div className="residents__detail-head card">
-          <div className="residents__avatar residents__avatar--lg" aria-hidden="true">
-            {resident.initials}
-          </div>
-          <div className="residents__detail-meta">
-            <span className={`badge badge--${statusTone[resident.status]}`}>
-              {statusLabel[resident.status]}
-            </span>
-            <span className="residents__meta-chip">Age {resident.age}</span>
-            <span className="residents__meta-chip">
-              Keyworker · {resident.keyworker}
-            </span>
-          </div>
-        </div>
-
-        <section className="residents__panel card">
-          <h3 className="residents__section-title">Summary</h3>
-          <p className="residents__summary">{resident.summary}</p>
-        </section>
-
-        <div className="residents__restricted card">
-          <div className="residents__restricted-icon" aria-hidden="true">&#x1f512;</div>
-          <h3 className="residents__restricted-title">
-            Full details are restricted
-          </h3>
-          <p className="residents__restricted-desc">
-            You are not assigned to {resident.name}. Service history, contact
-            details, audit trail, and comments are only visible to the
-            assigned care team and managers.
-          </p>
-
-          {accessSent ? (
-            <div className="residents__restricted-sent">
-              <span className="residents__restricted-sent-icon" aria-hidden="true">&#x2713;</span>
-              Request sent — the care team manager will review your request.
-            </div>
-          ) : (
-            <div className="residents__request-form">
-              <label>
-                <span className="residents__section-title">Reason for access</span>
-                <textarea
-                  rows={2}
-                  value={accessReason}
-                  onChange={(e) => setAccessReason(e.target.value)}
-                  placeholder="Why do you need access to this resident's records?"
-                />
-              </label>
-              <button
-                type="button"
-                className="btn btn--primary"
-                disabled={!accessReason.trim()}
-                onClick={() => void submitAccessRequest()}
-              >
-                Request access
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    )
-  }
+  const emptyState = (label: string) => (
+    <p className="residents__detail-empty">{label}</p>
+  )
 
   return (
     <PageTransition>
@@ -294,8 +339,12 @@ const ResidentDetail: React.FC = () => {
         {(
           [
             ["profile", "Profile"],
-            ["history", "Service history"],
-            ["audit", "Audit trail"],
+            ["daily", `Daily Record (${dailyRecords.length})`],
+            ["plans", `Plans & Assessments (${plans.length})`],
+            ["incidents", `Incidents & Reports (${incidents.length})`],
+            ["health", `Health & Reviews (${health.length})`],
+            ["activity", `Activity (${activity.length})`],
+            ["audit", "Audit Trail"],
             ["comments", "Comments"],
           ] as const
         ).map(([key, label]) => (
@@ -328,13 +377,8 @@ const ResidentDetail: React.FC = () => {
           <dl className="residents__contact">
             <div><dt>Name</dt><dd>{resident.primaryContact.name}</dd></div>
             <div><dt>Relation</dt><dd>{resident.primaryContact.relation}</dd></div>
-            <div><dt>Phone</dt><dd>{canPeople ? resident.primaryContact.phone : "•••• ••• ••••"}</dd></div>
+            <div><dt>Phone</dt><dd>{resident.primaryContact.phone}</dd></div>
           </dl>
-          {!canPeople && (
-            <p className="residents__hint">
-              Contact phone is masked. Home managers can see and dial the full number.
-            </p>
-          )}
 
           <h3 className="residents__section-title">Key facts</h3>
           <dl className="residents__facts">
@@ -347,20 +391,148 @@ const ResidentDetail: React.FC = () => {
         </motion.div>
       )}
 
-      {tab === "history" && (
-        <motion.div key="history" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
-        <section id="panel-history" role="tabpanel" aria-labelledby="tab-history" className="residents__panel card">
-          {sortedHistory.length === 0 ? (
-            <p className="residents__detail-empty">No service events yet.</p>
-          ) : (
+      {tab === "daily" && (
+        <motion.div key="daily" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+        <section id="panel-daily" role="tabpanel" aria-labelledby="tab-daily" className="residents__panel card">
+          <header className="residents__panel-head">
+            <h3 className="residents__section-title">Daily record</h3>
+            {canLog && (
+              <button type="button" className="btn btn--primary btn--sm" onClick={() => setDailyOpen(true)}>
+                + Add entry
+              </button>
+            )}
+          </header>
+          {dailyRecords.length === 0 ? emptyState("No daily record entries yet.") : (
             <StaggerList className="residents__timeline" as="ol">
-              {sortedHistory.map((e) => (
-                <StaggerItem key={e.id} as="li" className={`residents__event residents__event--${e.kind}`}>
-                  <span className="residents__event-when">{e.at}</span>
+              {dailyRecords.map((r) => (
+                <StaggerItem key={r.id} as="li" className="residents__event">
+                  <span className="residents__event-when">{r.date}</span>
                   <div className="residents__event-body">
-                    <div className="residents__event-kind">{kindLabel[e.kind]}</div>
-                    <div className="residents__event-summary">{e.summary}</div>
-                    <div className="residents__event-by">by {e.by}</div>
+                    <div className="residents__event-summary"><strong>Daily log:</strong> {r.dailyLog}</div>
+                    <div className="residents__event-summary"><strong>Education:</strong> {r.dailyEducation}</div>
+                    <div className="residents__event-summary"><strong>Reflective:</strong> {r.reflective}</div>
+                    <div className="residents__event-by">by {r.loggedBy}</div>
+                  </div>
+                </StaggerItem>
+              ))}
+            </StaggerList>
+          )}
+        </section>
+        </motion.div>
+      )}
+
+      {tab === "plans" && (
+        <motion.div key="plans" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+        <section id="panel-plans" role="tabpanel" aria-labelledby="tab-plans" className="residents__panel card">
+          <header className="residents__panel-head">
+            <h3 className="residents__section-title">Plans &amp; assessments</h3>
+            {canLog && (
+              <button type="button" className="btn btn--primary btn--sm" onClick={() => setPlanOpen(true)}>
+                + Update plan
+              </button>
+            )}
+          </header>
+          {plans.length === 0 ? emptyState("No plans or assessments on file yet.") : (
+            <StaggerList className="residents__timeline" as="ol">
+              {plans.map((p) => (
+                <StaggerItem key={p.id} as="li" className="residents__event">
+                  <span className="residents__event-when">{p.updatedAt}</span>
+                  <div className="residents__event-body">
+                    <div className="residents__event-kind">{PLAN_KIND_LABEL[p.kind]}</div>
+                    <div className="residents__event-summary">{p.content}</div>
+                    <div className="residents__event-by">by {p.updatedBy}</div>
+                  </div>
+                </StaggerItem>
+              ))}
+            </StaggerList>
+          )}
+        </section>
+        </motion.div>
+      )}
+
+      {tab === "incidents" && (
+        <motion.div key="incidents" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+        <section id="panel-incidents" role="tabpanel" aria-labelledby="tab-incidents" className="residents__panel card">
+          <header className="residents__panel-head">
+            <h3 className="residents__section-title">Incidents &amp; reports</h3>
+            {canLog && (
+              <button type="button" className="btn btn--primary btn--sm" onClick={() => setIncidentOpen(true)}>
+                + New report
+              </button>
+            )}
+          </header>
+          {incidents.length === 0 ? emptyState("No incidents or reports on file yet.") : (
+            <StaggerList className="residents__timeline" as="ol">
+              {incidents.map((r) => (
+                <StaggerItem key={r.id} as="li" className="residents__event">
+                  <span className="residents__event-when">{r.occurredAt.replace("T", " ")}</span>
+                  <div className="residents__event-body">
+                    <div className="residents__event-kind">
+                      {INCIDENT_KIND_LABEL[r.kind]}{" "}
+                      <span className={`badge badge--${severityTone[r.severity]}`}>{r.severity}</span>
+                    </div>
+                    <div className="residents__event-summary">{r.description}</div>
+                    <div className="residents__event-by">by {r.reportedBy}</div>
+                  </div>
+                </StaggerItem>
+              ))}
+            </StaggerList>
+          )}
+        </section>
+        </motion.div>
+      )}
+
+      {tab === "health" && (
+        <motion.div key="health" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+        <section id="panel-health" role="tabpanel" aria-labelledby="tab-health" className="residents__panel card">
+          <header className="residents__panel-head">
+            <h3 className="residents__section-title">Health &amp; reviews</h3>
+            {canLog && (
+              <button type="button" className="btn btn--primary btn--sm" onClick={() => setHealthOpen(true)}>
+                + Log entry
+              </button>
+            )}
+          </header>
+          {health.length === 0 ? emptyState("No health records or reviews on file yet.") : (
+            <StaggerList className="residents__timeline" as="ol">
+              {health.map((r) => (
+                <StaggerItem key={r.id} as="li" className="residents__event">
+                  <span className="residents__event-when">{r.date}</span>
+                  <div className="residents__event-body">
+                    <div className="residents__event-kind">{HEALTH_KIND_LABEL[r.kind]}</div>
+                    <div className="residents__event-summary">{r.notes}</div>
+                    {r.attendees && r.attendees.length > 0 && (
+                      <div className="residents__event-by">Attendees: {r.attendees.join(", ")}</div>
+                    )}
+                    <div className="residents__event-by">by {r.loggedBy}</div>
+                  </div>
+                </StaggerItem>
+              ))}
+            </StaggerList>
+          )}
+        </section>
+        </motion.div>
+      )}
+
+      {tab === "activity" && (
+        <motion.div key="activity" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
+        <section id="panel-activity" role="tabpanel" aria-labelledby="tab-activity" className="residents__panel card">
+          <header className="residents__panel-head">
+            <h3 className="residents__section-title">Activity</h3>
+            {canLog && (
+              <button type="button" className="btn btn--primary btn--sm" onClick={() => setActivityOpen(true)}>
+                + Log activity
+              </button>
+            )}
+          </header>
+          {activity.length === 0 ? emptyState("No activity logged yet.") : (
+            <StaggerList className="residents__timeline" as="ol">
+              {activity.map((a) => (
+                <StaggerItem key={a.id} as="li" className="residents__event">
+                  <span className="residents__event-when">{a.date}</span>
+                  <div className="residents__event-body">
+                    <div className="residents__event-summary">{a.description}</div>
+                    <div className="residents__event-by">by {a.loggedBy}</div>
                   </div>
                 </StaggerItem>
               ))}
@@ -409,7 +581,7 @@ const ResidentDetail: React.FC = () => {
       {tab === "comments" && (
         <motion.div key="comments" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.15 }}>
         <section id="panel-comments" role="tabpanel" aria-labelledby="tab-comments" className="residents__panel card">
-          {canComment && (
+          {canLog && (
             <div className="residents__composer">
               {replyTarget && (
                 <div className="residents__reply-banner">
@@ -460,7 +632,7 @@ const ResidentDetail: React.FC = () => {
                       <time className="residents__comment-when">{c.at}</time>
                     </div>
                     <p className="residents__comment-body">{c.body}</p>
-                    {canComment && (
+                    {canLog && (
                       <button type="button" className="residents__reply-btn" onClick={() => {
                         setReplyTo(c.id)
                         document.getElementById("resident-comment")?.focus()
@@ -491,6 +663,141 @@ const ResidentDetail: React.FC = () => {
         </motion.div>
       )}
       </AnimatePresence>
+
+      {/* ── New daily record ─────────────────────────── */}
+      <Modal open={dailyOpen} onClose={() => setDailyOpen(false)} eyebrow="DAILY RECORD" title="Add daily record entry" size="md">
+        <form onSubmit={handleAddDaily}>
+          <label className="form-field">
+            <span className="form-field__label">Date</span>
+            <input type="date" name="date" className="form-field__control" required />
+          </label>
+          <label className="form-field">
+            <span className="form-field__label">Daily log</span>
+            <textarea name="dailyLog" className="form-field__control" rows={2} required />
+          </label>
+          <label className="form-field">
+            <span className="form-field__label">Daily education</span>
+            <textarea name="dailyEducation" className="form-field__control" rows={2} required />
+          </label>
+          <label className="form-field">
+            <span className="form-field__label">Reflective (young person's feedback)</span>
+            <textarea name="reflective" className="form-field__control" rows={2} required />
+          </label>
+          <div className="modal__form-actions">
+            <button type="button" className="btn btn--ghost" onClick={() => setDailyOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn--primary">Save</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Update plan ───────────────────────────────── */}
+      <Modal open={planOpen} onClose={() => setPlanOpen(false)} eyebrow="PLANS & ASSESSMENTS" title="Update plan or assessment" size="md">
+        <form onSubmit={handleSavePlan}>
+          <label className="form-field">
+            <span className="form-field__label">Type</span>
+            <select name="kind" className="form-field__control" defaultValue="care_plan">
+              {(Object.keys(PLAN_KIND_LABEL) as PlanKind[]).map((k) => (
+                <option key={k} value={k}>{PLAN_KIND_LABEL[k]}</option>
+              ))}
+            </select>
+          </label>
+          <label className="form-field">
+            <span className="form-field__label">Content</span>
+            <textarea name="content" className="form-field__control" rows={4} required />
+          </label>
+          <div className="modal__form-actions">
+            <button type="button" className="btn btn--ghost" onClick={() => setPlanOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn--primary">Save</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── New incident/report ──────────────────────── */}
+      <Modal open={incidentOpen} onClose={() => setIncidentOpen(false)} eyebrow="INCIDENTS & REPORTS" title="New incident or report" size="md">
+        <form onSubmit={handleAddIncident}>
+          <div className="form-row">
+            <label className="form-field">
+              <span className="form-field__label">Type</span>
+              <select name="kind" className="form-field__control" defaultValue="incident">
+                {(Object.keys(INCIDENT_KIND_LABEL) as IncidentReportKind[]).map((k) => (
+                  <option key={k} value={k}>{INCIDENT_KIND_LABEL[k]}</option>
+                ))}
+              </select>
+            </label>
+            <label className="form-field">
+              <span className="form-field__label">Severity</span>
+              <select name="severity" className="form-field__control" defaultValue="minor">
+                <option value="minor">Minor</option>
+                <option value="moderate">Moderate</option>
+                <option value="major">Major</option>
+                <option value="critical">Critical</option>
+              </select>
+            </label>
+          </div>
+          <label className="form-field">
+            <span className="form-field__label">When</span>
+            <input type="datetime-local" name="occurredAt" className="form-field__control" required />
+          </label>
+          <label className="form-field">
+            <span className="form-field__label">Description</span>
+            <textarea name="description" className="form-field__control" rows={3} required />
+          </label>
+          <div className="modal__form-actions">
+            <button type="button" className="btn btn--ghost" onClick={() => setIncidentOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn--primary">Save</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── New health/review entry ──────────────────── */}
+      <Modal open={healthOpen} onClose={() => setHealthOpen(false)} eyebrow="HEALTH & REVIEWS" title="Log health record or review" size="md">
+        <form onSubmit={handleAddHealth}>
+          <div className="form-row">
+            <label className="form-field">
+              <span className="form-field__label">Type</span>
+              <select name="kind" className="form-field__control" defaultValue="health_report">
+                {(Object.keys(HEALTH_KIND_LABEL) as HealthRecordKind[]).map((k) => (
+                  <option key={k} value={k}>{HEALTH_KIND_LABEL[k]}</option>
+                ))}
+              </select>
+            </label>
+            <label className="form-field">
+              <span className="form-field__label">Date</span>
+              <input type="date" name="date" className="form-field__control" required />
+            </label>
+          </div>
+          <label className="form-field">
+            <span className="form-field__label">Notes</span>
+            <textarea name="notes" className="form-field__control" rows={3} required />
+          </label>
+          <label className="form-field">
+            <span className="form-field__label">Attendees (optional, comma-separated)</span>
+            <input name="attendees" className="form-field__control" placeholder="e.g. LAC Minutes attendees" />
+          </label>
+          <div className="modal__form-actions">
+            <button type="button" className="btn btn--ghost" onClick={() => setHealthOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn--primary">Save</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── New activity ──────────────────────────────── */}
+      <Modal open={activityOpen} onClose={() => setActivityOpen(false)} eyebrow="ACTIVITY" title="Log activity" size="sm">
+        <form onSubmit={handleAddActivity}>
+          <label className="form-field">
+            <span className="form-field__label">Date</span>
+            <input type="date" name="date" className="form-field__control" required />
+          </label>
+          <label className="form-field">
+            <span className="form-field__label">Description</span>
+            <textarea name="description" className="form-field__control" rows={3} required />
+          </label>
+          <div className="modal__form-actions">
+            <button type="button" className="btn btn--ghost" onClick={() => setActivityOpen(false)}>Cancel</button>
+            <button type="submit" className="btn btn--primary">Save</button>
+          </div>
+        </form>
+      </Modal>
     </div>
     </PageTransition>
   )
