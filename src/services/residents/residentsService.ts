@@ -13,7 +13,7 @@
  * compensating control (view AND change are both logged).
  */
 import { mockResponse } from "../gateway/gatewayClient"
-import { findMockUser } from "../../auth/user"
+import { findMockUser, DEFAULT_MOCK_USER } from "../../auth/user"
 import * as auditService from "../audit/auditService"
 import {
   RESIDENTS,
@@ -51,11 +51,17 @@ import type {
 /** Parse "2026-04-11 14:32" -> epoch for chronological sorting. */
 const toEpoch = (at: string) => new Date(at.replace(" ", "T")).getTime()
 
-/** Current mock user, for stamping who did what and the audit trail. */
+/**
+ * Current mock user, for stamping who did what and the audit trail.
+ * Mirrors `identityService.ts`'s `readStoredUser()` — falls back to
+ * `DEFAULT_MOCK_USER` rather than `undefined` when nothing is stored
+ * yet (the common case on first load, before any demo-user switch).
+ */
 const currentMockUser = () => {
   const stored =
     typeof window !== "undefined" ? window.localStorage.getItem("icare.user") : null
-  return stored ? findMockUser(stored) : undefined
+  if (!stored) return DEFAULT_MOCK_USER
+  return findMockUser(stored) ?? DEFAULT_MOCK_USER
 }
 
 const logResidentEvent = (action: string, resident: ResidentProfile) => {

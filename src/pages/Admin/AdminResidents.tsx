@@ -26,7 +26,7 @@ import type {
  * TODO(integration): PATCH /api/admin/residents/:id body=UpdateResidentRequest
  */
 
-const HOMES = ["Willow House", "Oakmoor"]
+const HOMES = ["Willow House", "Oakmoor House", "Rowan Lodge"]
 const KEYWORKERS = ["Priya A.", "Daniel T.", "Amira O.", "Tomas R.", "Clara F."]
 const STATUSES: ResidentStatus[] = ["stable", "needs-review", "new", "transitioning"]
 

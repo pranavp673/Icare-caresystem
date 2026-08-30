@@ -586,7 +586,7 @@ const CrossHomeCoverPanel: React.FC<{ homeId: string }> = ({ homeId }) => {
 
   useEffect(() => {
     let cancelled = false
-    void accessService.listGrantsForHome(homeId).then((rows) => {
+    void accessService.listGrantsFromHome(homeId).then((rows) => {
       if (!cancelled) setGrants(rows)
     })
     return () => {
@@ -618,7 +618,7 @@ const CrossHomeCoverPanel: React.FC<{ homeId: string }> = ({ homeId }) => {
   return (
     <div className="card card--padded sr-cover-panel">
       <header className="section-head">
-        <h3 className="section-title">Cross-home cover this week</h3>
+        <h3 className="section-title">Your staff covering elsewhere</h3>
         <span className="badge">{active.length}</span>
       </header>
       <ul className="sr-cover__list">
@@ -626,7 +626,7 @@ const CrossHomeCoverPanel: React.FC<{ homeId: string }> = ({ homeId }) => {
           <li key={g.id} className="sr-cover__row">
             <div className="sr-cover__info">
               <span className="sr-cover__name">{g.staffName}</span>
-              <span className="sr-cover__note">{g.shiftNote ?? `Covering ${g.shiftDate}`}</span>
+              <span className="sr-cover__note">{g.shiftNote ?? `Covering ${g.homeName} · ${g.shiftDate}`}</span>
             </div>
             {canRevoke && (
               <button type="button" className="btn btn--ghost btn--sm" onClick={() => setRevokeTarget(g)}>

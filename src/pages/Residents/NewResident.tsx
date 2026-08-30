@@ -20,7 +20,7 @@ import type { CreateResidentRequest } from "../../services/residents/residents.t
  * TODO(integration): POST /api/residents body=CreateResidentRequest
  */
 
-const HOMES = ["Willow House", "Oakmoor"]
+const HOMES = ["Willow House", "Oakmoor House", "Rowan Lodge"]
 const KEYWORKERS = ["Priya A.", "Daniel T.", "Amira O.", "Tomas R.", "Clara F."]
 
 const EMPTY_FORM: CreateResidentRequest = {

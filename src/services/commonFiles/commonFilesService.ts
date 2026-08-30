@@ -4,7 +4,7 @@
  * are gated in the UI by `commonFiles.log` / `commonFiles.edit`.
  */
 import { mockResponse } from "../gateway/gatewayClient"
-import { findMockUser } from "../../auth/user"
+import { findMockUser, DEFAULT_MOCK_USER } from "../../auth/user"
 import {
   COMMON_FILE_DOCS,
   CHECK_ENTRIES,
@@ -24,14 +24,19 @@ import type {
   AddHandoverRequest,
 } from "./commonFiles.types"
 
-/** Name of the current mock user, for stamping who performed an action. */
+/**
+ * Name of the current mock user, for stamping who performed an action.
+ * Mirrors `identityService.ts`'s `readStoredUser()` — falls back to
+ * `DEFAULT_MOCK_USER` rather than "Unknown" when nothing is stored yet
+ * (the common case on first load, before any demo-user switch).
+ */
 const currentUserName = (): string => {
   const stored =
     typeof window !== "undefined"
       ? window.localStorage.getItem("icare.user")
       : null
-  const user = stored ? findMockUser(stored) : undefined
-  return user?.name ?? "Unknown"
+  if (!stored) return DEFAULT_MOCK_USER.name
+  return findMockUser(stored)?.name ?? DEFAULT_MOCK_USER.name
 }
 
 export const getStatementOfPurpose = (

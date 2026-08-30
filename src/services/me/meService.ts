@@ -14,7 +14,7 @@ import {
   SM_UPCOMING_SHIFTS,
   SM_REQUESTS,
 } from "./me.mock"
-import { findMockUser } from "../../auth/user"
+import { findMockUser, DEFAULT_MOCK_USER } from "../../auth/user"
 import type {
   CreateLeaveRequest,
   CreateOvertimeRequest,
@@ -25,13 +25,21 @@ import type {
   WorkingSnapshot,
 } from "./me.types"
 
-/** Return the current mock user, or null if none stored. */
+/**
+ * Return the current mock user. Mirrors `identityService.ts`'s
+ * `readStoredUser()` — falls back to `DEFAULT_MOCK_USER` rather than
+ * `undefined` when nothing is stored yet (the common case on first
+ * load, before any demo-user switch). The old `undefined` fallback was
+ * a live crash risk: `getUpcomingShifts` calls `currentMockUser()!`
+ * below and dereferences it immediately.
+ */
 const currentMockUser = () => {
   const stored =
     typeof window !== "undefined"
       ? window.localStorage.getItem("icare.user")
       : null
-  return stored ? findMockUser(stored) : undefined
+  if (!stored) return DEFAULT_MOCK_USER
+  return findMockUser(stored) ?? DEFAULT_MOCK_USER
 }
 
 /**

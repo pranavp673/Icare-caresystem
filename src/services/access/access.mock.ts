@@ -18,6 +18,15 @@ export type HomeAccessGrant = {
   id: string
   staffId: string
   staffName: string
+  /** The home usually staffed by this person — whose manager sees this
+   *  in "your staff covering elsewhere" (see accessService.listGrantsFromHome).
+   *  Only Willow has a Registered/Deputy Manager persona in this demo,
+   *  so seed data always originates from Willow — a manager can only
+   *  ever see grants for *their own* staff, not the covered home's
+   *  (undemoable here: Oakmoor/Rowan have no manager persona to view it). */
+  fromHomeId: string
+  fromHomeName: string
+  /** The home being covered. */
   homeId: string
   homeName: string
   /** yyyy-mm-dd, Monday of the covering week. */
@@ -50,6 +59,8 @@ export const HOME_ACCESS_GRANTS: HomeAccessGrant[] = [
     id: "hag-1",
     staffId: "u-pro",
     staffName: "Amira O.",
+    fromHomeId: "home-willow",
+    fromHomeName: "Willow House",
     homeId: "home-oakmoor",
     homeName: "Oakmoor House",
     weekStart: thisMonday(),
