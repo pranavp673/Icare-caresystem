@@ -62,6 +62,9 @@ export type Permission =
                           //   Deputy Manager/Registered Manager (own home), RI/Admin (all homes);
                           //   actual scope resolved by staffScope.ts, not by this flag alone
   | "variance.approve" //   approve or decline a variance request (Manager, Deputy)
+  | "swap.approve" //       advance a shift swap's two-step approval (FR-TS-05) —
+                          //   Team Leader (step 1), Deputy Manager/Registered
+                          //   Manager/Admin (step 2, gated further by payroll.view)
   | "onCall.edit" //        manage on-call schedule (Registered Manager, Admin — FR-TS-06)
   | "payroll.view" //       Payroll tab — Registered Manager, Admin only (FR-TS-07)
 

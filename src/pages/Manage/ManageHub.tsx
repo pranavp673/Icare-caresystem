@@ -58,7 +58,7 @@ const priorityLabel = (p: ApprovalItem["priority"]) =>
 
 const swapStatusTone = (s: SwapActivity["status"]) => {
   switch (s) {
-    case "accepted":
+    case "approved":
       return "success"
     case "declined":
       return "danger"

@@ -18,6 +18,7 @@ import {
 } from "../../services"
 import type { TeamMember } from "../../services/team/team.types"
 import type { ApprovalItem, SwapActivity } from "../../services/manage/manage.types"
+import { SWAP_STATUS_LABEL } from "../Manage/manage.mock"
 import type { RotaEntry } from "../../services/rota/rota.types"
 import type { OnCallEntry, PayrollPeriod } from "../../services/timeSheet/timeSheet.types"
 import type { SupervisionRecord } from "../../services/supervision/supervision.types"
@@ -67,6 +68,14 @@ const TimeSheetHub: React.FC = () => {
   const canOnCallEdit = can("onCall.edit")
   const canPayrollView = can("payroll.view")
   const canSupervisionLog = can("supervision.log")
+  // FR-TS-05 two-step swap approval: Team Leader is the swap.approve
+  // holder WITHOUT home.view (Deputy Manager/Registered Manager/Admin
+  // all have home.view, so they're excluded from the first step —
+  // "Team Leader approves first" is literal). The second step reuses
+  // canPayrollView, the same Registered-Manager-tier signal staffScope
+  // uses, so Admin (who also holds payroll.view) can act as a backstop.
+  const canApproveSwapStepOne = can("swap.approve") && !can("home.view")
+  const canApproveSwapStepTwo = canPayrollView
 
   const homeId = activeHome?.id ?? user.primaryHome.id
   const myIdentity = user.teamMemberId ?? user.id
@@ -88,8 +97,12 @@ const TimeSheetHub: React.FC = () => {
   }, [user.homes])
 
   const scope = useMemo(
-    () => resolveStaffScope(user, members, { hasHomeView: can("home.view") }),
-    [user, members, can]
+    () =>
+      resolveStaffScope(user, members, {
+        hasHomeView: can("home.view"),
+        isRegisteredManagerTier: canPayrollView,
+      }),
+    [user, members, can, canPayrollView]
   )
   const activeIds = useMemo(
     () => (selectedId ? [selectedId] : scope.map((m) => m.id)),
@@ -253,6 +266,17 @@ const TimeSheetHub: React.FC = () => {
       })
   }
 
+  const handleApproveSwap = (swap: SwapActivity) => {
+    void manageService.approveSwap(swap.id, user.name).then((updated) => {
+      setSwaps((list) => list.map((s) => (s.id === updated.id ? updated : s)))
+      toast.success(
+        updated.status === "approved"
+          ? "Swap approved"
+          : "Swap advanced to Registered Manager"
+      )
+    })
+  }
+
   const myRecords = useMemo(
     () => supervisionRecords.filter((r) => r.superviseeId === myIdentity),
     [supervisionRecords, myIdentity]
@@ -414,17 +438,32 @@ const TimeSheetHub: React.FC = () => {
                 ? emptyState("No swap activity.")
                 : (
                   <StaggerList className="time-sheet__approvals">
-                    {swaps.map((s) => (
-                      <StaggerItem key={s.id} className="time-sheet__approval">
-                        <div className="time-sheet__approval-body">
-                          <span className="time-sheet__approval-name">
-                            {s.requester.name} → {s.counterparty.name}
-                          </span>
-                          <span className="time-sheet__approval-summary">{s.summary}</span>
-                        </div>
-                        <span className="badge">{s.status.replace("_", " ")}</span>
-                      </StaggerItem>
-                    ))}
+                    {swaps.map((s) => {
+                      const canActOnThis =
+                        (s.status === "pending_team_leader" && canApproveSwapStepOne) ||
+                        (s.status === "pending_registered_manager" && canApproveSwapStepTwo)
+                      return (
+                        <StaggerItem key={s.id} className="time-sheet__approval">
+                          <div className="time-sheet__approval-body">
+                            <span className="time-sheet__approval-name">
+                              {s.requester.name} → {s.counterparty.name}
+                            </span>
+                            <span className="time-sheet__approval-summary">{s.summary}</span>
+                          </div>
+                          <span className="badge">{SWAP_STATUS_LABEL[s.status]}</span>
+                          {canActOnThis && (
+                            <button
+                              type="button"
+                              className="btn btn--primary btn--sm"
+                              onClick={() => handleApproveSwap(s)}
+                              title="Confirms the covering staff member is appropriately qualified/trained for this shift"
+                            >
+                              {s.status === "pending_team_leader" ? "Approve (Team Leader)" : "Approve (Registered Manager)"}
+                            </button>
+                          )}
+                        </StaggerItem>
+                      )
+                    })}
                   </StaggerList>
                 )}
             </motion.section>

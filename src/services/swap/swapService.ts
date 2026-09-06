@@ -1,11 +1,12 @@
 /**
- * SwapSvc client. Peer-to-peer shift swaps. The signed-in user creates a
- * swap request, the counterparty accepts or declines. There is no
- * manager approval path — managers only see the activity feed via
- * `manageService.listSwaps`.
+ * SwapSvc client. The signed-in user creates a swap request, the
+ * counterparty accepts or declines. Accepting starts the FR-TS-05
+ * manager-approval chain (`manageService.approveSwap`) rather than
+ * finishing the swap outright — see `acceptSwap` below.
  */
 import { mockResponse } from "../gateway/gatewayClient"
 import { MY_REQUESTS } from "../me/me.mock"
+import { MANAGE_SWAPS } from "../manage/manage.mock"
 import type {
   CreateSwapRequest,
   MyRequest,
@@ -43,37 +44,27 @@ export const listMySwaps = (
 export const acceptSwap = (id: string): Promise<SwapActivity> => {
   // TODO(integration): POST /api/swaps/${id}/accept
   //   SwapSvc verifies the caller is the counterparty before updating.
-  void id
-  return mockResponse<SwapActivity>({
-    id,
-    requesterId: "",
-    requester: { name: "—", initials: "—", role: "—", home: "—" },
-    counterpartyId: "",
-    counterparty: { name: "You", initials: "YO", home: "—" },
-    fromStart: "",
-    toStart: "",
-    summary: "",
-    when: "Just now",
-    status: "accepted",
-  })
+  const swap = MANAGE_SWAPS.find((s) => s.id === id)
+  if (!swap) {
+    return Promise.reject({ status: 404, code: "NOT_FOUND", message: "Swap not found" })
+  }
+  // Accepting kicks off the FR-TS-05 manager-approval chain, not the end
+  // of the process — see manageService.approveSwap for the two steps.
+  swap.status = "pending_team_leader"
+  swap.when = "Accepted just now"
+  return mockResponse({ ...swap })
 }
 
 export const declineSwap = (id: string): Promise<SwapActivity> => {
   // TODO(integration): POST /api/swaps/${id}/decline
   //   SwapSvc verifies the caller is the counterparty before updating.
-  void id
-  return mockResponse<SwapActivity>({
-    id,
-    requesterId: "",
-    requester: { name: "—", initials: "—", role: "—", home: "—" },
-    counterpartyId: "",
-    counterparty: { name: "You", initials: "YO", home: "—" },
-    fromStart: "",
-    toStart: "",
-    summary: "",
-    when: "Just now",
-    status: "declined",
-  })
+  const swap = MANAGE_SWAPS.find((s) => s.id === id)
+  if (!swap) {
+    return Promise.reject({ status: 404, code: "NOT_FOUND", message: "Swap not found" })
+  }
+  swap.status = "declined"
+  swap.when = "Declined just now"
+  return mockResponse({ ...swap })
 }
 
 export const cancelSwap = (id: string): Promise<void> => {

@@ -1,8 +1,9 @@
 /**
- * SwapSvc types. Swaps are peer-to-peer: the requester offers a shift to
- * a counterparty, the counterparty accepts or declines. Managers see the
- * activity feed but cannot approve or decline — that's handled by the
- * Manage hub's swap panel via `manageService.listSwaps`.
+ * SwapSvc types. The requester offers a shift to a counterparty; the
+ * counterparty accepts or declines. Once accepted, a two-step manager
+ * approval follows (FR-TS-05: Team Leader, then Registered Manager)
+ * before the swap is final — that step lives in `manageService.approveSwap`,
+ * surfaced in Time Sheet's Swaps tab, not here.
  */
 import type { SwapActivity } from "../manage/manage.mock"
 import type { MyRequest } from "../me/me.mock"

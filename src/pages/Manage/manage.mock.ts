@@ -33,7 +33,9 @@ export const ACCESS_LEVEL_LABEL: Record<PermissionRow["accessLevel"], string> = 
 
 export const SWAP_STATUS_LABEL: Record<SwapActivity["status"], string> = {
   awaiting_teammate: "Awaiting teammate",
-  accepted: "Accepted",
+  pending_team_leader: "Pending Team Leader",
+  pending_registered_manager: "Pending Registered Manager",
+  approved: "Approved",
   declined: "Declined",
   cancelled: "Cancelled",
 }

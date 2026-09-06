@@ -213,16 +213,22 @@ const TeamOverview: React.FC = () => {
       if (q && !s.requester.name.toLowerCase().includes(q) && !s.counterparty.name.toLowerCase().includes(q)) continue
       const statusLabel =
         s.status === "awaiting_teammate" ? "Pending"
-        : s.status === "accepted" ? "Approved"
+        : s.status === "pending_team_leader" ? "Pending Team Leader"
+        : s.status === "pending_registered_manager" ? "Pending Registered Manager"
+        : s.status === "approved" ? "Approved"
         : s.status === "declined" ? "Declined"
         : "Cancelled"
-      if (approvalStatusFilter === "pending" && statusLabel !== "Pending") continue
-      if (approvalStatusFilter === "approved" && statusLabel !== "Approved") continue
+      const isPending =
+        s.status === "awaiting_teammate" ||
+        s.status === "pending_team_leader" ||
+        s.status === "pending_registered_manager"
+      if (approvalStatusFilter === "pending" && !isPending) continue
+      if (approvalStatusFilter === "approved" && s.status !== "approved") continue
       const statusTone =
-        s.status === "awaiting_teammate" ? "warning"
-        : s.status === "accepted" ? "success"
+        s.status === "approved" ? "success"
         : s.status === "declined" ? "danger"
-        : "neutral"
+        : s.status === "cancelled" ? "neutral"
+        : "warning"
       rows.push({
         id: s.id,
         requester: s.requester,
@@ -583,8 +589,12 @@ const TeamOverview: React.FC = () => {
                     {s.when}
                     {s.status === "awaiting_teammate"
                       ? " · awaiting teammate"
-                      : s.status === "accepted"
-                      ? " · accepted"
+                      : s.status === "pending_team_leader"
+                      ? " · pending team leader"
+                      : s.status === "pending_registered_manager"
+                      ? " · pending registered manager"
+                      : s.status === "approved"
+                      ? " · approved"
                       : s.status === "declined"
                       ? " · declined"
                       : " · cancelled"}

@@ -157,6 +157,32 @@ const PROFILE_DETAIL: Record<
     summary:
       "Stable; ADHD managed with structured daily routine. Enjoys music sessions and outdoor activities. School attendance good.",
   },
+  s9: {
+    dateOfBirth: "2013-02-14",
+    age: 13,
+    primaryContact: {
+      name: "Naomi Fitch",
+      relation: "Social Worker",
+      phone: "+44 7700 900132",
+    },
+    admissionDate: "2025-09-02",
+    roomNumber: "R-101",
+    summary:
+      "Stable placement. Settling into Rowan Lodge's therapeutic routine, engaging well with on-site clinical support.",
+  },
+  s10: {
+    dateOfBirth: "2017-05-30",
+    age: 9,
+    primaryContact: {
+      name: "Devon Ashby",
+      relation: "Placing Authority",
+      phone: "+44 7700 900131",
+    },
+    admissionDate: "2026-08-20",
+    roomNumber: "R-104",
+    summary:
+      "New admission — still settling in. Building trust with keyworker Jordan M.; familiarising with house routines.",
+  },
 }
 
 /** Merged list: base residents + per-resident detail. */

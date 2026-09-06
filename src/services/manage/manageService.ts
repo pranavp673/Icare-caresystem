@@ -3,14 +3,17 @@
  *
  *   • Overrides   → RotaSvc (`/api/rota/overrides*`)
  *   • Approvals   → RequestSvc (`/api/requests*`) — leave + overtime ONLY
- *   • Swaps       → SwapSvc (`/api/swaps/team`) — visibility-only
+ *   • Swaps       → SwapSvc (`/api/swaps/team`) — read-only feed here
  *   • Permissions → gateway proxy to AcsSvc (`/api/manage/permissions*`)
  *
- * Swap items are NOT in the approvals list — managers don't approve
- * swaps; the counterparty does. Swaps appear here as a read-only feed
- * so leadership knows what's in flight.
+ * Swap items are NOT in the approvals list — the FR-TS-05 two-step
+ * approval (Team Leader, then Registered Manager) is a Time Sheet
+ * action via `approveSwap` below, not a Manage-hub approval. Manage hub
+ * and Team Overview both render the swap feed read-only so leadership
+ * knows what's in flight.
  */
 import { mockResponse } from "../gateway/gatewayClient"
+import * as auditService from "../audit/auditService"
 import {
   MANAGE_APPROVALS,
   MANAGE_OVERRIDES,
@@ -172,6 +175,46 @@ export const listSwaps = (
     )
   }
   return mockResponse(data)
+}
+
+export const approveSwap = (
+  id: string,
+  approvedBy: string
+): Promise<SwapActivity> => {
+  // TODO(integration): POST /api/swaps/${id}/approve body={ approvedBy }
+  //   Server verifies the caller actually holds the permission for
+  //   whichever step is currently pending before advancing it.
+  const swap = MANAGE_SWAPS.find((s) => s.id === id)
+  if (!swap) {
+    return Promise.reject({ status: 404, code: "NOT_FOUND", message: "Swap not found" })
+  }
+  if (swap.status === "pending_team_leader") {
+    swap.status = "pending_registered_manager"
+    swap.when = `Approved by Team Leader — ${approvedBy}`
+  } else if (swap.status === "pending_registered_manager") {
+    swap.status = "approved"
+    swap.when = `Approved by Registered Manager — ${approvedBy}`
+  } else {
+    return Promise.reject({
+      status: 409,
+      code: "INVALID_STATE",
+      message: `Swap ${id} is not awaiting approval (status: ${swap.status})`,
+    })
+  }
+
+  void auditService.recordEvent({
+    actorId: null,
+    actor: approvedBy,
+    actorRole: "—",
+    action: `Approved shift swap for ${swap.requester.name} ↔ ${swap.counterparty.name}`,
+    target: swap.summary,
+    home: swap.requester.home,
+    domain: "home",
+    channel: "rota",
+    severity: "notice",
+  })
+
+  return mockResponse({ ...swap }, 300)
 }
 
 // ── Permissions ────────────────────────────────────────────────────────

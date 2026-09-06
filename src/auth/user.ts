@@ -143,27 +143,31 @@ export const MOCK_USERS: MockUser[] = [
       "commonFiles.view",
       "commonFiles.log",
       "timesheets.view.all",
+      "swap.approve",
       "supervision.log",
     ],
   },
 
   /**
    * Tier 3 — Deputy Manager (Sam Ortega)
-   * Full operational access scoped to their assigned home. Can approve
-   * variances, view all timesheets, edit residents, configure teams and
-   * rota pattern. Same tier as Registered Manager; the exact set of
-   * capabilities Deputy Manager is excluded from (relative to Registered
-   * Manager) is still an open question upstream — this permission set is
-   * carried forward unchanged from before the rename.
+   * Full operational access scoped to their assigned home (Oakmoor House,
+   * per §2.3 — also matches the existing resident-ownership data in
+   * residents.mock.ts, where Sam is already primaryOwnerId/assignedOwnerId
+   * for both Oakmoor residents). Can approve variances, view all
+   * timesheets, edit residents, configure teams and rota pattern. Same
+   * tier as Registered Manager; the exact set of capabilities Deputy
+   * Manager is excluded from (relative to Registered Manager) is still an
+   * open question upstream — this permission set is carried forward
+   * unchanged from before the rename.
    */
   {
     id: "u-ad",
     name: "Sam Ortega",
     initials: "SO",
-    roleLabel: "Deputy Manager · Willow House",
+    roleLabel: "Deputy Manager · Oakmoor House",
     org: BRIGHTPATH_ORG,
-    primaryHome: HOME_WILLOW,
-    homes: [HOME_WILLOW],
+    primaryHome: HOME_OAKMOOR,
+    homes: [HOME_OAKMOOR],
     teamId: "",
     permissions: [
       "me.view",
@@ -185,6 +189,7 @@ export const MOCK_USERS: MockUser[] = [
       "residents.edit",
       "residents.comments.write",
       "timesheets.view.all",
+      "swap.approve",
       "audit.view",
       "audit.view.all",
       "commonFiles.view",
@@ -236,6 +241,7 @@ export const MOCK_USERS: MockUser[] = [
       "residents.edit",
       "residents.comments.write",
       "timesheets.view.all",
+      "swap.approve",
       "audit.view",
       "audit.view.all",
       "audit.export",
@@ -337,6 +343,7 @@ export const MOCK_USERS: MockUser[] = [
       "residents.edit",
       "residents.comments.write",
       "timesheets.view.all",
+      "swap.approve",
       "variance.approve",
       "manage.view",
       "approvals.review",

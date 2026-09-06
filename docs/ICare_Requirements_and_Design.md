@@ -57,7 +57,7 @@ When staff are rostered to cover a shift at a home other than their usual assign
 - The moment a cross-home covering shift appears on the rota, that staff member is automatically recognized as on-duty at the covering home for the shift window — no manual grant step for the normal case.
 - Registered Manager (or System Admin) can revoke or restrict a specific person's delegated access for a specific shift when there's a reason not to extend it (e.g. an active safeguarding concern).
 
-**Reconciling with §2.2's universal resident-data visibility:** reading any resident's file at any home is already unrestricted for every role (§2.2) — so this delegation mechanism can't be gating *read* access, or it would be redundant. It governs **write access** instead: whether a covering staff member is recognized as on-duty at that home and can create/log entries there (Daily Record, Incidents, etc. — §3.5.1) for the shift they're covering. This is the interpretation used for the design in §11.7 below.
+**Reconciling with §2.2's universal resident-data visibility:** reading any resident's file at any home is already unrestricted for every role (§2.2), and so is the ability to create/log entries there — file creation spans the operational chain regardless of home (§2.2). That leaves nothing left for this mechanism to gate, on either reads or writes. What it actually delivers, then, is **situational awareness and a safeguarding override, not an access gate**: the Registered Manager (whose staff member is away covering elsewhere) sees a "your staff covering elsewhere this week" panel on their dashboard, and can revoke that person's delegated status — a recorded safeguarding decision — even though it doesn't currently block anything else in the app. The covering staff member sees a small confirmation banner on their own dashboard that they're covering elsewhere. This is the interpretation used for the design in §11.2 below (not §11.7 — the panel lives on the Executive/Personal dashboards, not Manage Hub).
 
 ### 2.2 Permission Model
 
@@ -67,7 +67,7 @@ When staff are rostered to cover a shift at a home other than their usual assign
 - `system.company.edit` distinguishes System Admin from Registered Manager/Deputy
 - Scope filtering uses `user.homes` array for multi-home roles (System Admin, RI)
 - **Resident data is universally visible:** reports, incidents, and any record concerning a young person in care are visible to **every role**, regardless of home or team scope. The tiered scope above applies only to staff-facing operational data — it never gates access to a child's records or a home's incident/safeguarding activity.
-- **File creation spans the operational chain:** the process to create a file (checks, logs, reports, etc.) is available to everyone from Registered Manager down to RSW — Registered Manager, Deputy Manager, Team Leader, and RSW can all create/log records. System Admin and RI sit outside this chain — their role is administrative/oversight (see §2.1), not day-to-day record creation.
+- **File creation spans the operational chain:** the process to create a file (checks, logs, reports, etc.) is available to everyone from Registered Manager down to RSW — Registered Manager, Deputy Manager, Team Leader, and RSW can all create/log records. RI sits outside this chain — their role is oversight (see §2.1), not day-to-day record creation. **System Admin is the one exception to "outside the chain":** per §2.1's full-access row, Admin retains every operational permission alongside the system-level master-data ones, consistent with being the organisation's true super user and the top-level control point for cross-home access delegation (§2.1.1) — Admin isn't excluded from record creation, it's simply never the *only* route to it.
 
 ### 2.3 Demo Users
 
@@ -417,23 +417,24 @@ src/
 
 | Path | Component | Guard | Description |
 |------|-----------|-------|-------------|
-| `/passcode` | PasscodeGate | None | Demo access gate |
-| `/login` | LoginPage | Passcode | Role selection (persona switcher) |
-| `/` | Dashboard | Auth | Redirects based on role |
-| `/dashboard` | PersonalDashboard | Auth | RSW / Team Leader view |
-| `/executive` | ExecutiveDashboard | Auth + `home.view` | Executive dashboard — single-home render for Registered Manager/Deputy Manager, multi-home grid for RI/System Admin. Renamed from `/senior`; no Senior Manager role in the new model |
+| `/login` | Login | None | Role selection (persona switcher) |
+| `/` | — | Auth | Redirects to `/me` |
+| `/me` | DashboardRouter | Auth | Renders the Personal or Executive dashboard internally based on role — no separate `/dashboard`/`/executive` routes; both live at this one path |
+| `/me/personal` | PersonalRouter | Auth | Personal record view (leave, schedule) |
 | `/team` | TeamOverview | Auth | Team requests & activity |
-| `/calendar` | CalendarPage | Auth | Shift calendar |
-| `/common-files` | CommonFilesPage | Auth | Home-level compliance documents & checks (FR-COM) — viewable by every role, no tier gate |
-| `/timesheet` | TimeSheetPage | Auth | Time Sheet — standalone section (FR-TS): Monthly Rota, leave/overtime/swap requests, on-call, payroll prep, and Supervision (FR-SUP). Visibility scoped per-tab (FR-TS-08 to -11 / FR-SUP-02), not a route-level permission gate |
-| `/homes` | HomesPage | Auth + `home.view` | Care home grid |
-| `/residents` | ResidentsList | Auth | Young people list |
-| `/residents/:id` | ResidentDetail | Auth | Individual resident |
+| `/calendar` | CalendarView | Auth | Shift calendar |
+| `/common-files` | CommonFilesHub | Auth | Home-level compliance documents & checks (FR-COM) — viewable by every role, no tier gate |
+| `/timesheet` | TimeSheetHub | Auth | Time Sheet — standalone section (FR-TS): Monthly Rota, leave/overtime/swap requests, on-call, payroll prep, and Supervision (FR-SUP). Visibility scoped per-tab (FR-TS-08 to -11 / FR-SUP-02), not a route-level permission gate |
+| `/homes` | HomesList | Auth + `home.view` | Care home grid |
+| `/residents` | ResidentsList | Auth + `residents.view` | Young people list |
+| `/residents/new` | NewResident | Auth + `residents.edit` | Add a resident |
+| `/residents/:id` | ResidentDetail | Auth + `residents.view` | Individual resident |
 | `/manage` | ManageHub | Auth + `manage.view` | Approvals & overrides |
-| `/rota` | RotaPage | Auth + `rota.view` | Rota timeline |
-| `/metrics` | MetricsPage | Auth + `home.view` | KPI dashboard |
-| `/audit` | AuditLog | Auth + `audit.read` | Audit events |
-| `/admin/*` | AdminPages | Auth + `system.*` | System setup |
+| `/rota` | RotaView | Auth + `team.analytics.view` | Rota timeline |
+| `/metrics` | MetricsView | Auth + `home.analytics.view` | KPI dashboard |
+| `/audit` | AuditLog | Auth + `audit.view` | Audit events |
+| `/admin/setup` | AdminSetup | Auth + `system.company.edit` | Company/home/work-pattern master data |
+| `/admin/residents` | AdminResidents | Auth + `system.home.edit` | Resident master data |
 | `/settings` | SettingsPage | Auth | Theme & accessibility |
 
 ### 8.2 Sidebar Navigation
@@ -585,6 +586,7 @@ RotaEntry.coveringHomeId (when set) → auto-creates HomeAccessGrant (staff, cov
 - Today's schedule (meetings, visits, reviews)
 - Escalations panel
 - Pending items panel
+- **Cross-home cover panel** (§2.1.1): "your staff covering elsewhere this week" — one row per staff member whose rota entry covers a different home, with a Revoke action recording a reason (e.g. an active safeguarding concern). Shown only when the signed-in manager has staff with an active grant; not shown to RI/System Admin's multi-home view below. The covering staff member sees the mirror of this as a small banner on their own Personal Dashboard (§11.1), not here.
 
 **Multi-home view (RI / System Admin — the only roles that span multiple homes):**
 - Grid of home health cards (one per home)
@@ -621,17 +623,18 @@ Unlike Common Files, Time Sheet, and Supervision (§11.13, §11.14), this page c
 - Table with columns: Code, Name, Home, Keyworker, Status badge, Last review date
 - Search by name/code
 
-**Detail view — replaces the old flat "service history timeline" with §3.5.1's 14 document types, grouped into 5 tabs by cadence/nature rather than shown as one undifferentiated feed:**
+**Detail view — replaces the old flat "service history timeline" with §3.5.1's 14 document types grouped by cadence/nature, plus Audit Trail and Comments, as 8 tabs:**
 
-- **Profile header**: Name, code, home, keyworker, room, DOB/age, admission date, primary contact
+- **Profile tab**: Name, code, home, keyworker, room, DOB/age, admission date, primary contact, summary
 - **Daily Record tab**: Daily Logs, Daily Education, Reflective — one combined entry per day (three fields on the same entry, not three separate feeds), since all three share the daily cadence and are typically filled in together by the RSW/Team Leader on shift
 - **Plans & Assessments tab**: Care Plan, Behaviour Support Plan, Risk Assessments, EHCP, Family Tree — longer-lived reference documents, each shown as latest-version-plus-edit-history rather than a chronological feed
 - **Incidents & Reports tab**: Accident Reports, Missing Reports, Incidents — event-triggered, newest first, each with a "+ New [type]" action; visually flagged (severity styling similar to Audit Log, §11.10) given the safeguarding weight of this category
 - **Health & Reviews tab**: Health Reports and Appointments, LAC Minutes — clinical and statutory-review records together, since both are periodic/event-triggered and health-adjacent
 - **Activity tab**: Activity records — kept separate from Daily Record since its cadence is "as required," not strictly daily, so it shouldn't imply a same-day expectation
-- **Comments section**: Threaded discussion (top-level + nested replies), author avatars, timestamps, role badges — stays as a persistent panel below the tabs, not a tab itself, since it's cross-cutting discussion rather than a document type
+- **Audit Trail tab**: every view/change logged against this resident (the compensating control the universal-visibility rule in §2.2 relies on — see §2.2's note and §3.9) — read-only, populated automatically, no manual entries
+- **Comments tab**: threaded discussion (top-level + nested replies), author avatars, timestamps, role badges — a tab like the others, not a panel below them, since it's still worth keeping distinct from the document-type tabs above
 
-Creation follows the operational-chain rule from §2.2 for every tab except Comments, which anyone with page access can post to: Registered Manager, Deputy Manager, Team Leader, and RSW can all log new entries; System Admin and RI are read/oversight only here, consistent with their role elsewhere in the app.
+Creation follows the operational-chain rule from §2.2 for every tab except Audit Trail (system-populated) and Comments (open to anyone with page access, including System Admin and RI): Registered Manager, Deputy Manager, Team Leader, and RSW can all log new entries on the document-type tabs; System Admin and RI are read/oversight only there, consistent with their role elsewhere in the app.
 
 ### 11.7 Manage Hub
 
@@ -640,7 +643,8 @@ Creation follows the operational-chain rule from §2.2 for every tab except Comm
 - **Approvals tab**: Cards showing request type, requester, summary, approve/decline actions
 - **Swaps tab**: Cards showing requester <-> counterparty, shift details, status
 - **Permissions tab**: Table of staff with access level dropdown and scope
-  - **Delegated Access panel** (§2.1.1): auto-populated from this week's cross-home rota assignments — columns: staff member, covering home, shift date/time, status (Active/Revoked). Registered Manager and System Admin can revoke a specific entry (adds a reason field, e.g. an active safeguarding concern); RI sees the list for oversight but cannot revoke. This governs write access only — everyone can already read any resident's file at any home per §2.2
+
+Cross-home access delegation (§2.1.1) is **not** a Manage Hub panel — see §11.2 instead. It surfaces as situational awareness on the dashboards (a "your staff covering elsewhere" list for the Registered Manager, a confirmation banner for the covering staff member), not as a standing permissions table, since there's no access left to gate once §2.2's universal visibility is accounted for.
 
 ### 11.8 Rota
 

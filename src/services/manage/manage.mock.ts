@@ -142,11 +142,13 @@ export const MANAGE_APPROVALS: ApprovalItem[] = [
 ]
 
 /**
- * Swaps — visibility-only feed. Managers and teammates both consume this
- * through the Team Overview page. Decisions live with the teammate the
- * swap was requested *to* (counterparty); managers do NOT approve or
- * decline swaps — they only watch so they can intervene with an override
- * if a swap stalls.
+ * Swaps — peer request/accept, then a two-step manager approval
+ * (FR-TS-05): once the counterparty accepts, Team Leader approves first,
+ * then Registered Manager, before the swap is final. Managers and
+ * teammates both consume this through the Team Overview page, but the
+ * approval actions themselves live in Time Sheet's Swaps tab
+ * (`manageService.approveSwap`) — Team Overview/Manage Hub render the
+ * feed read-only.
  *
  * `requesterId` / `counterpartyId` match TeamMember.id so the service
  * layer can scope the feed to a single team when the viewer only has the
@@ -164,7 +166,13 @@ export type SwapActivity = {
   toStart: string
   summary: string
   when: string
-  status: "awaiting_teammate" | "accepted" | "declined" | "cancelled"
+  status:
+    | "awaiting_teammate" //          waiting on the counterparty to accept/decline
+    | "pending_team_leader" //        counterparty accepted; awaiting TL approval (FR-TS-05 step 1)
+    | "pending_registered_manager" // TL approved; awaiting RM approval (FR-TS-05 step 2)
+    | "approved" //                   both steps done, swap is final
+    | "declined"
+    | "cancelled"
 }
 
 export const MANAGE_SWAPS: SwapActivity[] = [
@@ -189,8 +197,8 @@ export const MANAGE_SWAPS: SwapActivity[] = [
     fromStart: "2026-04-17T14:00",
     toStart: "2026-04-19T14:00",
     summary: "Thu 17 Apr 14:00 → Sat 19 Apr 14:00",
-    when: "Sent 3d ago",
-    status: "awaiting_teammate",
+    when: "Accepted 1d ago",
+    status: "pending_team_leader",
   },
   {
     id: "sw-3",
@@ -201,8 +209,8 @@ export const MANAGE_SWAPS: SwapActivity[] = [
     fromStart: "2026-04-09T07:00",
     toStart: "2026-04-11T07:00",
     summary: "Thu 9 Apr 07:00 → Sat 11 Apr 07:00",
-    when: "Accepted yesterday",
-    status: "accepted",
+    when: "Approved 2d ago",
+    status: "approved",
   },
   {
     id: "sw-4",
@@ -215,6 +223,18 @@ export const MANAGE_SWAPS: SwapActivity[] = [
     summary: "Thu 18 Jun 07:00 → Sat 20 Jun 07:00",
     when: "Sent 1d ago",
     status: "awaiting_teammate",
+  },
+  {
+    id: "sw-5",
+    requesterId: "tm-4",
+    requester: { name: "Tomás R.", initials: "TR", role: "RSW", home: "Willow House" },
+    counterpartyId: "tm-8",
+    counterparty: { name: "Beatrice M.", initials: "BM", home: "Willow House" },
+    fromStart: "2026-04-21T07:00",
+    toStart: "2026-04-23T07:00",
+    summary: "Tue 21 Apr 07:00 → Thu 23 Apr 07:00",
+    when: "Approved by Team Leader 4h ago",
+    status: "pending_registered_manager",
   },
 ]
 
