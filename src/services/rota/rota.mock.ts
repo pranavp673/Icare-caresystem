@@ -120,6 +120,10 @@ const generateWeek = (weekStart: string): RotaWeek => {
   const monday = new Date(weekStart + "T00:00:00")
   const days: RotaDay[] = []
   const entries: RotaEntry[] = []
+  // entryId resets per call, so it must be namespaced by weekStart --
+  // otherwise any caller that fetches multiple weeks and combines their
+  // entries (e.g. TimeSheetHub's 4-week Monthly Rota) gets duplicate ids
+  // across weeks, which React then reports as duplicate list keys.
   let entryId = 0
 
   // Build day ISO strings
@@ -142,7 +146,7 @@ const generateWeek = (weekStart: string): RotaWeek => {
       const p = pattern[d]
       if (!p) continue
       entries.push({
-        id: `e-${++entryId}`,
+        id: `e-${weekStart}-${++entryId}`,
         date: dayIsos[d],
         startTime: p.start,
         endTime: p.end,
@@ -165,7 +169,7 @@ const generateWeek = (weekStart: string): RotaWeek => {
         const nextDay = c.afterDay + 1
         if (nextDay >= 7) continue // skip cross-week
         entries.push({
-          id: `e-${++entryId}`,
+          id: `e-${weekStart}-${++entryId}`,
           date: dayIsos[nextDay],
           startTime: "00:00",
           endTime: c.end,
@@ -186,7 +190,7 @@ const generateWeek = (weekStart: string): RotaWeek => {
     const staff = STAFF.find((s) => s.id === ot.staffId)!
     const team = TEAMS[staff.teamIdx]
     entries.push({
-      id: `e-${++entryId}`,
+      id: `e-${weekStart}-${++entryId}`,
       date: dayIsos[ot.day],
       startTime: ot.start,
       endTime: ot.end,
