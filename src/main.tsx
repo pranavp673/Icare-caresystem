@@ -16,7 +16,7 @@ import "./styles/legacy-overrides.scss"
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <PasscodeGate>
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         <ToastProvider>
           <App />
