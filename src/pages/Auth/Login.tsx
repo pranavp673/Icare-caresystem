@@ -96,8 +96,11 @@ const Login: React.FC = () => {
       .login({ email: user.name, password: "demo" })
       .then((res) => {
         setAuthToken(res.token)
-        // Full page load so AuthContext re-bootstraps with the new user
-        window.location.href = "/"
+        // Full page load so AuthContext re-bootstraps with the new user.
+        // Use the configured base path, not a bare "/" -- under a non-root
+        // deploy (e.g. GitHub Pages' /<repo>/ subpath) an absolute "/"
+        // navigates outside the app entirely.
+        window.location.href = import.meta.env.BASE_URL
       })
       .catch(() => {
         setLoggingInAs(null)

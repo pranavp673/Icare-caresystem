@@ -177,8 +177,12 @@ const UserMenu: React.FC<Props> = ({ theme, themeMode, onToggleTheme }) => {
                   onClick={() => {
                     close()
                     void switchDemoUser(u.id).then(() => {
-                      // Full page reload so every component re-renders with new permissions
-                      window.location.href = "/"
+                      // Full page reload so every component re-renders with new
+                      // permissions. Use the configured base path, not a bare
+                      // "/" -- under a non-root deploy (e.g. GitHub Pages'
+                      // /<repo>/ subpath) an absolute "/" navigates outside
+                      // the app entirely.
+                      window.location.href = import.meta.env.BASE_URL
                     })
                   }}
                 >
