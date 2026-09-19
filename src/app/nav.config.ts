@@ -208,6 +208,15 @@ export const NAV_GROUPS: NavGroup[] = [
         hint: "Edit resident master data",
         requiredPerms: ["system.home.edit"],
       },
+      {
+        id: "admin-forms",
+        to: "/admin/forms",
+        label: "Form definitions",
+        icon: FileText,
+        matchPrefix: "/admin/forms",
+        hint: "Configure Common Files form types and fields",
+        requiredPerms: ["system.forms.edit"],
+      },
     ],
   },
 ]

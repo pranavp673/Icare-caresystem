@@ -104,3 +104,6 @@ export type Permission =
   | "system.home.edit" //           register / edit Home records
   | "system.workpatterns.edit" //   manage Work Pattern definitions
   | "system.staff.createSenior" //  create Registered Manager and Deputy Manager accounts
+  | "system.forms.edit" //          author Common Files form definitions (Phase 7 forms
+                        //          engine, /admin/forms) — distinct from `commonFiles.edit`,
+                        //          which only covers the unrelated Statement of Purpose

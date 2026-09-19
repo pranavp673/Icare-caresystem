@@ -21,6 +21,7 @@ import RotaView from "./pages/Rota/RotaView"
 import SettingsPage from "./pages/Settings/SettingsPage"
 import AdminSetup from "./pages/Admin/AdminSetup"
 import AdminResidents from "./pages/Admin/AdminResidents"
+import AdminFormDefinitions from "./pages/Admin/AdminFormDefinitions"
 
 /**
  * Route tree with permission guards.
@@ -193,6 +194,14 @@ function App() {
           element={
             <RequirePermission anyOf={["system.home.edit"]}>
               <AdminResidents />
+            </RequirePermission>
+          }
+        />
+        <Route
+          path="/admin/forms"
+          element={
+            <RequirePermission anyOf={["system.forms.edit"]}>
+              <AdminFormDefinitions />
             </RequirePermission>
           }
         />

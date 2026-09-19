@@ -99,14 +99,58 @@
   border-top: 1px solid var(--color-divider);
 }
 
-/* ── Checks ─────────────────────────────────────────── */
+/* ── Form-definition chip row (Phase 7) ────────────────── */
 
-.common-files__checks {
+.common-files__defs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5) 0;
+}
+.common-files__def-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-pill, 999px);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-fg-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  transition: background var(--motion-fast) var(--ease-standard),
+    color var(--motion-fast) var(--ease-standard);
+}
+.common-files__def-chip:hover {
+  color: var(--color-fg);
+}
+.common-files__def-chip.is-active {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+.common-files__def-chip-cadence {
+  font-size: var(--text-xs);
+  color: var(--color-fg-subtle);
+}
+.common-files__def-chip.is-active .common-files__def-chip-cadence {
+  color: inherit;
+  opacity: 0.75;
+}
+.common-files__def-description {
+  font-size: var(--text-sm);
+  color: var(--color-fg-muted);
+  margin: var(--space-1) 0 0;
+}
+
+/* ── Entries (generic — one type for every form definition) ─────── */
+
+.common-files__entries {
   list-style: none;
   padding: 0;
   margin: 0;
 }
-.common-files__check {
+.common-files__entry {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -114,102 +158,32 @@
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid var(--color-divider);
 }
-.common-files__check:last-child {
+.common-files__entry:last-child {
   border-bottom: 0;
 }
-.common-files__check-body {
+.common-files__entry-body {
   min-width: 0;
 }
-.common-files__check-type {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  color: var(--color-fg);
-}
-.common-files__check-notes {
-  font-size: var(--text-sm);
-  color: var(--color-fg-muted);
-  margin-top: 2px;
-}
-.common-files__check-meta {
-  font-size: var(--text-xs);
-  color: var(--color-fg-subtle);
-  white-space: nowrap;
-}
-
-/* ── Meetings ───────────────────────────────────────── */
-
-.common-files__meetings {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.common-files__meeting {
+.common-files__entry-fields {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--color-divider);
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
 }
-.common-files__meeting:last-child {
-  border-bottom: 0;
-}
-.common-files__meeting-body {
-  min-width: 0;
-}
-.common-files__meeting-kind {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
-  color: var(--color-fg);
-}
-.common-files__meeting-notes {
-  font-size: var(--text-sm);
-  color: var(--color-fg-muted);
-  margin-top: 2px;
-}
-.common-files__meeting-attendees {
-  font-size: var(--text-xs);
-  color: var(--color-fg-subtle);
-  margin-top: var(--space-1);
-}
-.common-files__meeting-date {
-  font-size: var(--text-xs);
-  color: var(--color-fg-subtle);
-  white-space: nowrap;
-}
-
-/* ── Handovers ──────────────────────────────────────── */
-
-.common-files__handovers {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.common-files__handover {
+.common-files__entry-field {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--color-divider);
+  flex-direction: column;
+  gap: 1px;
 }
-.common-files__handover:last-child {
-  border-bottom: 0;
+.common-files__entry-field-label {
+  font-size: var(--text-xs);
+  color: var(--color-fg-subtle);
 }
-.common-files__handover-body {
-  min-width: 0;
-}
-.common-files__handover-shift {
+.common-files__entry-field-value {
   font-size: var(--text-sm);
-  font-weight: var(--weight-semibold);
   color: var(--color-fg);
+  font-weight: var(--weight-medium);
 }
-.common-files__handover-notes {
-  font-size: var(--text-sm);
-  color: var(--color-fg-muted);
-  margin-top: 2px;
-}
-.common-files__handover-meta {
+.common-files__entry-meta {
   font-size: var(--text-xs);
   color: var(--color-fg-subtle);
   white-space: nowrap;
@@ -221,9 +195,7 @@
   .common-files__panel-head {
     padding: var(--space-3) var(--space-4);
   }
-  .common-files__check,
-  .common-files__meeting,
-  .common-files__handover {
+  .common-files__entry {
     flex-direction: column;
     gap: var(--space-2);
     padding: var(--space-3) var(--space-4);

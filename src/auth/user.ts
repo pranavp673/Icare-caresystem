@@ -365,6 +365,7 @@ export const MOCK_USERS: MockUser[] = [
       "system.home.edit",
       "system.workpatterns.edit",
       "system.staff.createSenior",
+      "system.forms.edit",
     ],
   },
 ]
